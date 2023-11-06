@@ -1,5 +1,8 @@
-import kr.ac.hansung.screenCapture.DXGIScreenCapture;
-import kr.ac.hansung.screenCapture.GDIScreenCapture;
+package kr.ac.hansung.remoteDesktop.window;
+
+import kr.ac.hansung.remoteDesktop.screenCapture.DXGIScreenCapture;
+import kr.ac.hansung.remoteDesktop.screenCapture.GDIScreenCapture;
+import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
 
 import javax.swing.*;
 import java.awt.*;
@@ -7,7 +10,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 
-public class Main {
+public class Host {
     static long captureTime = 0;
 
     public static void main(String[] args) {

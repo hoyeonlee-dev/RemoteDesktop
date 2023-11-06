@@ -1,5 +1,8 @@
-import kr.ac.hansung.screenCapture.DXGIScreenCapture;
-import kr.ac.hansung.screenCapture.GDIScreenCapture;
+package kr.ac.hansung.remoteDesktop.window;
+
+import kr.ac.hansung.remoteDesktop.screenCapture.DXGIScreenCapture;
+import kr.ac.hansung.remoteDesktop.screenCapture.GDIScreenCapture;
+import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

@@ -1,3 +1,5 @@
+package kr.ac.hansung.remoteDesktop.ui;
+
 import javax.swing.*;
 import java.awt.*;
 

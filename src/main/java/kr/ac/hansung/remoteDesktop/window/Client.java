@@ -1,3 +1,7 @@
+package kr.ac.hansung.remoteDesktop.window;
+
+import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -5,7 +9,7 @@ import java.awt.image.DataBufferByte;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 
-public class Receiver {
+public class Client {
     public static void main(String[] args) {
         JFrame frame = new JFrame("클라이언트");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

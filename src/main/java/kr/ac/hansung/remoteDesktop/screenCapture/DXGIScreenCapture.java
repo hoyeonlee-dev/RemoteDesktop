@@ -1,4 +1,4 @@
-package kr.ac.hansung.screenCapture;
+package kr.ac.hansung.remoteDesktop.screenCapture;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;

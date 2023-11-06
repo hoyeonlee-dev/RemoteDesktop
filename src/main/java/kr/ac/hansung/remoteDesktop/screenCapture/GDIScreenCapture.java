@@ -1,4 +1,4 @@
-package kr.ac.hansung.screenCapture;
+package kr.ac.hansung.remoteDesktop.screenCapture;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -11,7 +11,6 @@ public class GDIScreenCapture implements IScreenCapture, IBufferedCapture{
     private byte[] frameBuffer;
 
     static {
-//        System.load("C:\\Users\\hoyeon\\RiderProjects\\GDIScreenCapture\\x64\\Debug\\GDIScreenCapture.dll");
         System.load("C:\\Users\\hoyeon\\source\\Network_Programming\\GDIScreenCapture\\x64\\Release\\GDIScreenCapture.dll");
     }
 

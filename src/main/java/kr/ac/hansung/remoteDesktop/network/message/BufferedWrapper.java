@@ -1,4 +1,4 @@
-package kr.ac.hansung;
+package kr.ac.hansung.remoteDesktop.network.message;
 
 import java.awt.image.BufferedImage;
 import java.io.Serializable;
