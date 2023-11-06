@@ -4,6 +4,12 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
 
+/**
+ * DXGI 네이티브 API를 사용하여 화면을 캡처하는 클래스
+ * java.awt.Robot과 {@link kr.ac.hansung.remoteDesktop.screenCapture.GDIScreenCapture}보다 빠름
+ * 주의 : dll을 로딩하지 못하면 Error발생
+ * @author hoyeon
+ */
 public class DXGIScreenCapture implements IScreenCapture, IBufferedCapture{
     private int width;
     private int height;

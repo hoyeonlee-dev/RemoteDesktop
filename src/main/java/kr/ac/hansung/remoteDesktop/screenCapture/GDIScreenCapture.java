@@ -4,6 +4,13 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
 
+/**
+ * GDI 네이티브 API를 사용하여 화면을 캡처하는 클래스
+ * java.awt.Robot보다 적은 메모리를 사용하고 초당 프레임이 높지만
+ * {@link kr.ac.hansung.remoteDesktop.screenCapture.DXGIScreenCapture} 보다 상대적으로 느림
+ * 주의 : dll을 로딩하지 못하면 Error발생
+ * @author hoyeon
+ */
 public class GDIScreenCapture implements IScreenCapture, IBufferedCapture{
     private int height;
     private int width;
