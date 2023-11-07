@@ -19,7 +19,7 @@ public class DXGIScreenCapture implements IScreenCapture, IBufferedCapture{
     private byte[] frameBuffer;
 
     static {
-        System.load("C:\\Users\\hoyeon\\source\\Network_Programming\\DXGIScreenCapture\\x64\\Release\\DXGIScreenCapture.dll");
+        System.load("C:\\Users\\imyee\\Downloads\\DXGIScreenCapture.dll");
     }
 
     public int getWidth() {
