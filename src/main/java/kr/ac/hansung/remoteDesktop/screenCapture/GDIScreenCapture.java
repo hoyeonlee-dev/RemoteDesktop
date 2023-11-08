@@ -9,16 +9,25 @@ import java.awt.image.WritableRaster;
  * java.awt.Robot보다 적은 메모리를 사용하고 초당 프레임이 높지만
  * {@link kr.ac.hansung.remoteDesktop.screenCapture.DXGIScreenCapture} 보다 상대적으로 느림
  * 주의 : dll을 로딩하지 못하면 Error발생
+ *
  * @author hoyeon
  */
-public class GDIScreenCapture implements IScreenCapture, IBufferedCapture{
-    private int height;
-    private int width;
-
-    private byte[] frameBuffer;
-
+public class GDIScreenCapture implements IScreenCapture, ICaptureResult {
     static {
         System.load("C:\\Users\\hoyeon\\source\\Network_Programming\\GDIScreenCapture\\x64\\Release\\GDIScreenCapture.dll");
+    }
+
+    BufferedImage bufferedImage;
+    private int height;
+    private int width;
+    private final byte[] frameBuffer;
+
+    public GDIScreenCapture(int width, int height) {
+        this.height = height;
+        this.width = width;
+        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+        frameBuffer = new byte[width * height * 4];
+        onWindowSizeUpdated();
     }
 
     public int getHeight() {
@@ -39,21 +48,13 @@ public class GDIScreenCapture implements IScreenCapture, IBufferedCapture{
         onWindowSizeUpdated();
     }
 
-    public GDIScreenCapture(int width, int height) {
-        this.height = height;
-        this.width = width;
-        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
-        frameBuffer = new byte[width * height * 4];
-        onWindowSizeUpdated();
+    @Override
+    public byte[] getFrameBuffer() {
+        return frameBuffer;
     }
 
     public void onWindowSizeUpdated() {
 
-    }
-
-    @Override
-    public byte[] getFrameBuffer() {
-        return frameBuffer;
     }
 
     private native void updateWindowSize();
@@ -63,8 +64,6 @@ public class GDIScreenCapture implements IScreenCapture, IBufferedCapture{
     private native String getLogMessages();
 
     private native String getErrorMessages();
-
-    BufferedImage bufferedImage;
 
     public BufferedImage createBufferedImage() {
         var rawBits = getCapturedScreenByteArray();
@@ -80,5 +79,10 @@ public class GDIScreenCapture implements IScreenCapture, IBufferedCapture{
         System.arraycopy(rawBits, 0, dataBuffer.getData(), 0, Integer.min(rawBits.length, frameBuffer.length));
 
         return bufferedImage;
+    }
+
+    @Override
+    public void doCapture() {
+        getCapturedScreenByteArray();
     }
 }

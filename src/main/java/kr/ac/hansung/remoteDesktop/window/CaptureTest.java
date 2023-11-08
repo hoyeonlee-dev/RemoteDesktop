@@ -53,10 +53,8 @@ public class CaptureTest {
             ImageIO.write(image, "png", file);
 
             System.out.printf("%s에 저장했습니다.", file.getAbsolutePath());
-        }catch (IOException ignored){
+        } catch (IOException ignored) {
 
-        }
-        finally {
         }
     }
 }

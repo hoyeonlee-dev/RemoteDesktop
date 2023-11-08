@@ -8,18 +8,29 @@ import java.awt.image.WritableRaster;
  * DXGI 네이티브 API를 사용하여 화면을 캡처하는 클래스
  * java.awt.Robot과 {@link kr.ac.hansung.remoteDesktop.screenCapture.GDIScreenCapture}보다 빠름
  * 주의 : dll을 로딩하지 못하면 Error발생
+ *
  * @author hoyeon
  */
-public class DXGIScreenCapture implements IScreenCapture, IBufferedCapture{
-    private int width;
-    private int height;
-
-    private int frameRate;
-
-    private byte[] frameBuffer;
-
+public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
     static {
         System.load("C:\\Users\\hoyeon\\source\\Network_Programming\\DXGIScreenCapture\\x64\\Release\\DXGIScreenCapture.dll");
+    }
+
+    public int len;
+    BufferedImage bufferedImage;
+    private int width;
+    private int height;
+    private int frameRate;
+    private final byte[] frameBuffer;
+
+    public DXGIScreenCapture(int width, int height) {
+        this.width = width;
+        this.height = height;
+        frameRate = 60;
+        // bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+        frameBuffer = new byte[width * height * 4];
+        onWindowSizeUpdated();
     }
 
     public int getWidth() {
@@ -40,22 +51,17 @@ public class DXGIScreenCapture implements IScreenCapture, IBufferedCapture{
         onWindowSizeUpdated();
     }
 
+    @Override
+    public byte[] getFrameBuffer() {
+        return frameBuffer;
+    }
+
     public int getFrameRate() {
         return frameRate;
     }
 
     public void setFrameRate(int frameRate) {
         this.frameRate = frameRate;
-        onWindowSizeUpdated();
-    }
-
-    public DXGIScreenCapture(int width, int height) {
-        this.width = width;
-        this.height = height;
-        frameRate = 60;
-        // bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
-        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
-        frameBuffer = new byte[width * height * 4];
         onWindowSizeUpdated();
     }
 
@@ -73,14 +79,6 @@ public class DXGIScreenCapture implements IScreenCapture, IBufferedCapture{
         System.out.println(getLogMessages());
     }
 
-    BufferedImage bufferedImage;
-    public int len;
-
-    @Override
-    public byte[] getFrameBuffer() {
-        return frameBuffer;
-    }
-
     @Override
     public BufferedImage createBufferedImage() {
         var rawBits = getCapturedScreenByteArray();
@@ -90,8 +88,6 @@ public class DXGIScreenCapture implements IScreenCapture, IBufferedCapture{
         }
         if (rawBits.length <= 1024) {
             System.err.println("RawBits is too small : " + rawBits.length);
-//            System.err.println(getLogMessages());
-//            System.err.println(getErrorMessages());
         }
 
         WritableRaster raster = bufferedImage.getRaster();
@@ -100,4 +96,10 @@ public class DXGIScreenCapture implements IScreenCapture, IBufferedCapture{
 
         return bufferedImage;
     }
+
+    @Override
+    public void doCapture() {
+        getCapturedScreenByteArray();
+    }
+
 }
