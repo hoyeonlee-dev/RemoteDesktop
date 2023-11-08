@@ -2,13 +2,31 @@ package kr.ac.hansung.remoteDesktop.ui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 
 public class RemoteScreen extends JPanel {
-    private Image image;
+    static final int DEBUG_STRING_YPOS = 600;
+    static final int DEBUG_STRING_XPOS = 100;
+    static final int DEFAULT_FONT_SIZE = 20;
     long lastDrawnTime = 0;
-
     int width;
     int height;
+    Font font = new Font("Arial", Font.BOLD, DEFAULT_FONT_SIZE);
+    private Image image;
+
+    public RemoteScreen(int width, int height) {
+        super();
+        setDoubleBuffered(true);
+        this.width = width;
+        this.height = height;
+        setPreferredSize(new Dimension(width, height));
+    }
+
+    public RemoteScreen() {
+        super();
+        setDoubleBuffered(true);
+    }
 
     @Override
     public int getWidth() {
@@ -30,27 +48,16 @@ public class RemoteScreen extends JPanel {
 
     public synchronized void setImage(Image image) {
         this.image = image;
-        repaint();
     }
 
-    public RemoteScreen(int width, int height) {
-        super();
-        setDoubleBuffered(true);
-        this.width = width;
-        this.height = height;
-        setPreferredSize(new Dimension(width, height));
+    public synchronized void setImage(byte[] bytes) {
+        if (this.image == null) {
+            image = new BufferedImage(1920, 1080, BufferedImage.TYPE_4BYTE_ABGR);
+        }
+        var raster = ((BufferedImage) image).getRaster();
+        var dataBuffer = (DataBufferByte) raster.getDataBuffer();
+        System.arraycopy(bytes, 0, dataBuffer.getData(), 0, bytes.length);
     }
-
-    public RemoteScreen() {
-        super();
-        setDoubleBuffered(true);
-    }
-
-    static final int DEBUG_STRING_YPOS = 600;
-    static final int DEBUG_STRING_XPOS = 100;
-    static final int DEFAULT_FONT_SIZE = 20;
-    Font font = new Font("Arial", Font.BOLD, DEFAULT_FONT_SIZE);
-
 
     @Override
     public synchronized void paint(Graphics g) {
