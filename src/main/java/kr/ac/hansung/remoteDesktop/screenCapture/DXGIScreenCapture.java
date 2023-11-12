@@ -34,6 +34,7 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
         bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         frameBuffer = new byte[width * height * 4];
         onWindowSizeUpdated();
+
     }
 
     public int getWidth() {
