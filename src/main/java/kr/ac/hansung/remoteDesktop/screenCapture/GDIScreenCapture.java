@@ -18,7 +18,7 @@ public class GDIScreenCapture implements IScreenCapture, IBufferedCapture{
     private byte[] frameBuffer;
 
     static {
-        System.load("C:\\Users\\hoyeon\\source\\Network_Programming\\GDIScreenCapture\\x64\\Release\\GDIScreenCapture.dll");
+        System.load("C:\\Users\\imyee\\Downloads\\GDIScreenCapture.dll");
     }
 
     public int getHeight() {
