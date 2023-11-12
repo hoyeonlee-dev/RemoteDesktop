@@ -7,14 +7,18 @@ import kr.ac.hansung.remoteDesktop.connection.server.SessionManager;
 import kr.ac.hansung.remoteDesktop.connection.server.VideoServer;
 import kr.ac.hansung.remoteDesktop.screenCapture.DXGIScreenCapture;
 import kr.ac.hansung.remoteDesktop.screenCapture.GDIScreenCapture;
+import kr.ac.hansung.remoteDesktop.screenCapture.IScreenCapture;
 import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
 import kr.ac.hansung.remoteDesktop.window.event.StopStreamingOnClose;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class RemoteHostWindow implements IRDPWindow, Runnable {
     static long captureTime = 0;
+    int captureMode = 0;
     private final JFrame hostWindow;
 
     private boolean shouldStop;
@@ -22,13 +26,24 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
     public RemoteHostWindow(String title) throws HeadlessException {
         hostWindow = new JFrame(title);
         hostWindow.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-
         hostWindow.addWindowListener(new StopStreamingOnClose(this));
-
         hostWindow.setLayout(new BorderLayout());
         hostWindow.setSize(1920, 1080);
         hostWindow.setLocationRelativeTo(null);
         shouldStop = false;
+        hostWindow.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                super.keyReleased(e);
+                var k = e.getKeyChar();
+                if (k == KeyEvent.VK_1) {
+                    captureMode = 0;
+                }
+                if (k == KeyEvent.VK_1) {
+                    captureMode = 1;
+                }
+            }
+        });
     }
 
     public static void main(String[] args) {
@@ -48,8 +63,13 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
     }
 
     @Override
-    public void makeItStop() {
+    public void stopWindowAndService() {
         shouldStop = true;
+    }
+
+    @Override
+    public void add(Component component) {
+
     }
 
     @Override
@@ -59,8 +79,8 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
 
     @Override
     public void run() {
-        var gdiCapture = new GDIScreenCapture(1920, 1080);
-        var dxgiCapture = new DXGIScreenCapture(1920, 1080);
+        IScreenCapture gdiCapture = new GDIScreenCapture(1920, 1080);
+        IScreenCapture dxgiCapture = new DXGIScreenCapture(1920, 1080);
 
         var remoteScreen = new RemoteScreen(1920, 1080);
         add(remoteScreen, BorderLayout.CENTER);
@@ -73,8 +93,19 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
 
         showClient();
         while (!shouldStop) {
-            dxgiCapture.createBufferedImage();
-            var buffer = dxgiCapture.getFrameBuffer();
+            IScreenCapture iScreenCapture = null;
+            switch (captureMode) {
+                case 0:
+                    iScreenCapture = dxgiCapture;
+                    break;
+                case 1:
+                    iScreenCapture = gdiCapture;
+                    break;
+                default:
+                    throw new RuntimeException("존재하지 않는 캡처모드입니다.");
+            }
+            iScreenCapture.doCapture();
+            var buffer = iScreenCapture.getFrameBuffer();
             var sessions = sessionManager.getSessions();
             for (var p : sessions) {
                 p.getValue().sendVideo(buffer);

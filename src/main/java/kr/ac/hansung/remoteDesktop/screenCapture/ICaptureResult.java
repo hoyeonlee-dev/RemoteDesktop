@@ -20,5 +20,5 @@ public interface ICaptureResult {
      *
      * @return 스크린 샷을 담은 이미지
      */
-    BufferedImage createBufferedImage();
+    BufferedImage getBufferedImage();
 }

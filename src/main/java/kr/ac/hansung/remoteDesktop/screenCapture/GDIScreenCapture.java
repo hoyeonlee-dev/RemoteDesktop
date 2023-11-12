@@ -1,5 +1,7 @@
 package kr.ac.hansung.remoteDesktop.screenCapture;
 
+import kr.ac.hansung.remoteDesktop.util.DLLLoader;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
@@ -13,8 +15,9 @@ import java.awt.image.WritableRaster;
  * @author hoyeon
  */
 public class GDIScreenCapture implements IScreenCapture, ICaptureResult {
+    private final static String LIBRARY_NAME = "GDIScreenCapture.dll";
     static {
-        System.load("C:\\Users\\hoyeon\\source\\Network_Programming\\GDIScreenCapture\\x64\\Release\\GDIScreenCapture.dll");
+        DLLLoader.LoadDLL(LIBRARY_NAME);
     }
 
     BufferedImage bufferedImage;
@@ -65,10 +68,8 @@ public class GDIScreenCapture implements IScreenCapture, ICaptureResult {
 
     private native String getErrorMessages();
 
-    public BufferedImage createBufferedImage() {
-        var rawBits = getCapturedScreenByteArray();
-
-        if (rawBits.length <= 1024) {
+    public BufferedImage getBufferedImage() {
+        if (frameBuffer.length <= 1024) {
 //            System.err.println("RawBits is too small : " + rawBits.length);
 //            System.err.println(getLogMessages());
 //            System.err.println(getErrorMessages());
@@ -76,7 +77,7 @@ public class GDIScreenCapture implements IScreenCapture, ICaptureResult {
 
         WritableRaster raster = bufferedImage.getRaster();
         DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
-        System.arraycopy(rawBits, 0, dataBuffer.getData(), 0, Integer.min(rawBits.length, frameBuffer.length));
+        System.arraycopy(frameBuffer, 0, dataBuffer.getData(), 0, Integer.min(frameBuffer.length, dataBuffer.getData().length));
 
         return bufferedImage;
     }

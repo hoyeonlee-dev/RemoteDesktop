@@ -6,9 +6,11 @@ import java.awt.*;
 public interface IRDPWindow {
     void showClient();
 
-    void makeItStop();
-
     void hideClient();
+
+    void stopWindowAndService();
+
+    void add(Component component);
 
     void add(Component component, Object constraints);
 }

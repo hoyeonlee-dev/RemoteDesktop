@@ -43,8 +43,13 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
     }
 
     @Override
-    public void makeItStop() {
+    public void stopWindowAndService() {
         shouldStop = true;
+    }
+
+    @Override
+    public void add(Component component) {
+
     }
 
     public void hideClient() {

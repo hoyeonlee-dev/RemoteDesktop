@@ -1,5 +1,7 @@
 package kr.ac.hansung.remoteDesktop.screenCapture;
 
+import kr.ac.hansung.remoteDesktop.util.DLLLoader;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
@@ -12,11 +14,12 @@ import java.awt.image.WritableRaster;
  * @author hoyeon
  */
 public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
+    private static final String LIBRARY_NAME = "DXGIScreenCapture.dll";
+
     static {
-        System.load("C:\\Users\\hoyeon\\source\\Network_Programming\\DXGIScreenCapture\\x64\\Release\\DXGIScreenCapture.dll");
+        DLLLoader.LoadDLL(LIBRARY_NAME);
     }
 
-    public int len;
     BufferedImage bufferedImage;
     private int width;
     private int height;
@@ -80,19 +83,17 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
     }
 
     @Override
-    public BufferedImage createBufferedImage() {
-        var rawBits = getCapturedScreenByteArray();
-
-        if (rawBits == null) {
+    public BufferedImage getBufferedImage() {
+        if (frameBuffer == null) {
             return bufferedImage;
         }
-        if (rawBits.length <= 1024) {
-            System.err.println("RawBits is too small : " + rawBits.length);
+        if (frameBuffer.length <= 1024) {
+            System.err.println("RawBits is too small : " + frameBuffer.length);
         }
 
         WritableRaster raster = bufferedImage.getRaster();
         DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
-        System.arraycopy(rawBits, 0, dataBuffer.getData(), 0, Integer.min(rawBits.length, frameBuffer.length));
+        System.arraycopy(frameBuffer, 0, dataBuffer.getData(), 0, Integer.min(frameBuffer.length, dataBuffer.getData().length));
 
         return bufferedImage;
     }

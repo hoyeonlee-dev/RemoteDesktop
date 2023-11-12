@@ -30,14 +30,14 @@ public class CaptureTest {
         frame.add(bitmapCanvas, BorderLayout.CENTER);
         var rect = new Rectangle(0, 0, 1920, 1080);
 
-        takeScreenShot(dxgiCapture.createBufferedImage());
+        takeScreenShot(dxgiCapture.getBufferedImage());
 
         int count = 0;
         while (true) {
             var st = System.nanoTime();
 //            var capture = robot.createScreenCapture(rect);
 //            var capture = sc.getCapturedImage();
-            var capture = dxgiCapture.createBufferedImage();
+            var capture = dxgiCapture.getBufferedImage();
 //            var capture = gdiCapture.createBufferedImage();
 //            os.write(gdiCapture.getBOS());
 //            captureTime = System.nanoTime();

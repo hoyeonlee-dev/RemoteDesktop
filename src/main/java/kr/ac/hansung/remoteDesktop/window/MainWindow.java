@@ -3,19 +3,20 @@ package kr.ac.hansung.remoteDesktop.window;
 import javax.swing.*;
 import java.awt.*;
 
-public class MainWindow extends JFrame {
+public class MainWindow implements IRDPWindow {
+    JFrame mainWindow = null;
+
+    public MainWindow() {
+        this.mainWindow = new JFrame();
+        initFrame();
+    }
+
     public static void main(String[] args) {
         var window = new MainWindow();
-        var panel = new JPanel();
-        window.add(panel);
 
+        var panel = new JPanel();
         var serverButton = new JButton("서버");
         var clientButton = new JButton("클라이언트");
-
-        var dimension = new Dimension();
-        dimension.setSize(600, 400);
-        window.setSize(dimension);
-
         panel.setLayout(new GridLayout(2, 1));
         panel.add(serverButton);
         panel.add(clientButton);
@@ -32,6 +33,40 @@ public class MainWindow extends JFrame {
             client.start();
         });
 
-        window.setVisible(true);
+        window.add(panel);
+        window.showClient();
+    }
+
+    private void initFrame() {
+        if (mainWindow == null) throw new RuntimeException("메인 윈도우가 생성되지 않았습니다.");
+        var dimension = new Dimension();
+        dimension.setSize(600, 400);
+        mainWindow.setSize(dimension);
+        mainWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+    }
+
+    @Override
+    public void showClient() {
+        mainWindow.setVisible(true);
+    }
+
+    @Override
+    public void hideClient() {
+        mainWindow.setVisible(false);
+    }
+
+    @Override
+    public void stopWindowAndService() {
+
+    }
+
+    @Override
+    public void add(Component component) {
+        mainWindow.add(component);
+    }
+
+    @Override
+    public void add(Component component, Object constraints) {
+        mainWindow.add(component, constraints);
     }
 }

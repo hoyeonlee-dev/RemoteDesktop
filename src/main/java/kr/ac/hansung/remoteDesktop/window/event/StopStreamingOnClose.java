@@ -6,7 +6,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class StopStreamingOnClose extends WindowAdapter {
-    private IRDPWindow window;
+    private final IRDPWindow window;
 
     public StopStreamingOnClose(IRDPWindow window) {
         this.window = window;
@@ -14,7 +14,7 @@ public class StopStreamingOnClose extends WindowAdapter {
 
     @Override
     public void windowClosed(WindowEvent e) {
-        window.makeItStop();
+        window.stopWindowAndService();
     }
 
 
