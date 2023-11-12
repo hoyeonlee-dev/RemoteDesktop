@@ -327,9 +327,9 @@ public class MyWindow extends JFrame {
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.setBackground(Color.BLACK);
 
-        ImageIcon computersIcon = new ImageIcon("/resources/computers2.jpg");
-        ImageIcon settingsIcon = new ImageIcon("/resources/settings.jpg");
-        ImageIcon exitIcon = new ImageIcon("/resources/logout.jpg");
+        ImageIcon computersIcon = new ImageIcon(getClass().getClassLoader().getResource("computers.jpg"));
+        ImageIcon settingsIcon = new ImageIcon(getClass().getClassLoader().getResource("settings.jpg"));
+        ImageIcon exitIcon = new ImageIcon(getClass().getClassLoader().getResource("logout.jpg"));
 
         ImageIcon resizedComputersIcon = resizeImageIcon(computersIcon, 64, 64);
         ImageIcon resizedSettingsIcon = resizeImageIcon(settingsIcon, 64, 64);
@@ -350,11 +350,6 @@ public class MyWindow extends JFrame {
                 cardLayout.show(cardPanel, computersVisible ? "computers" : "settings");
                 card2Layout.show(card2Panel, computersVisible ? "computers2" : "settings2");
 
-                ImageIcon originalComputersIcon = new ImageIcon("/resources/computers2.jpg");
-                computersLabel.setIcon(resizeImageIcon(originalComputersIcon, 64, 64));
-
-                ImageIcon updatedSettingsIcon = new ImageIcon("/resources/settings.jpg");
-                settingsLabel.setIcon(resizeImageIcon(updatedSettingsIcon, 64, 64));
             }
         });
 
@@ -369,11 +364,6 @@ public class MyWindow extends JFrame {
                 cardLayout.show(cardPanel, computersVisible ? "computers" : "settings");
                 card2Layout.show(card2Panel, computersVisible ? "computers2" : "settings2");
 
-                ImageIcon originalSettingsIcon = new ImageIcon("/resources/settings2.jpg");
-                settingsLabel.setIcon(resizeImageIcon(originalSettingsIcon, 64, 64));
-
-                ImageIcon updatedComputersIcon = new ImageIcon("/resources/computers.jpg");
-                computersLabel.setIcon(resizeImageIcon(updatedComputersIcon, 64, 64));
             }
         });
 
