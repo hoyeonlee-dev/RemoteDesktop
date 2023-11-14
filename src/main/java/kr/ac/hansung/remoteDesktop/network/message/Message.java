@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class Message implements Serializable {
     final private byte[] byteArray;
 
+
     public Message(byte[] byteArray) {
         this.byteArray = byteArray;
     }

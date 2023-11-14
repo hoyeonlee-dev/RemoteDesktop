@@ -10,11 +10,13 @@ import kr.ac.hansung.remoteDesktop.screenCapture.GDIScreenCapture;
 import kr.ac.hansung.remoteDesktop.screenCapture.IScreenCapture;
 import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
 import kr.ac.hansung.remoteDesktop.window.event.StopStreamingOnClose;
+import org.xerial.snappy.Snappy;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 
 public class RemoteHostWindow implements IRDPWindow, Runnable {
     static long captureTime = 0;
@@ -108,7 +110,10 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
             var buffer = iScreenCapture.getFrameBuffer();
             var sessions = sessionManager.getSessions();
             for (var p : sessions) {
-                p.getValue().sendVideo(buffer);
+                try {
+                    p.getValue().sendVideo(Snappy.compress(buffer));
+                } catch (IOException e) {
+                }
             }
 //            TODO: 오디오 캡처 구현하기
 //                  구현한 뒤에 이 주석을 풀 것!

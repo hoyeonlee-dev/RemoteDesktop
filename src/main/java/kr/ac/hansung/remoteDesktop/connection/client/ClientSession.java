@@ -1,6 +1,7 @@
 package kr.ac.hansung.remoteDesktop.connection.client;
 
 import kr.ac.hansung.remoteDesktop.connection.Session;
+import org.xerial.snappy.Snappy;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -65,12 +66,18 @@ public class ClientSession extends Session {
         return true;
     }
 
+    byte[] tmp = new byte[20 * 1024 * 1024];
+
     public boolean receiveVideo(byte[] buffer) {
         if (videoSocket == null) return false;
         if (videoSocket.isClosed()) return false;
         try {
-            if (new BufferedInputStream(videoSocket.getInputStream()).readNBytes(buffer, 0, buffer.length) == -1)
-                return false;
+//            if (new BufferedInputStream(videoSocket.getInputStream()).readNBytes(buffer, 0, buffer.length) == -1)
+            var dataInputStream = new DataInputStream(videoSocket.getInputStream());
+            int len = dataInputStream.readInt();
+            dataInputStream.read(tmp, 0, len);
+            Snappy.uncompress(tmp, 0, len, buffer, 0);
+
         } catch (IOException e) {
             System.err.println(e.getMessage());
             return false;

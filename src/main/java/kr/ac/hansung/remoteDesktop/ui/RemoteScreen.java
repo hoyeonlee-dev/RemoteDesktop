@@ -59,6 +59,15 @@ public class RemoteScreen extends JPanel {
         System.arraycopy(bytes, 0, dataBuffer.getData(), 0, bytes.length);
     }
 
+    public synchronized void setImage(byte[] bytes, int offset, int len) {
+        if (this.image == null) {
+            image = new BufferedImage(1920, 1080, BufferedImage.TYPE_4BYTE_ABGR);
+        }
+        var raster = ((BufferedImage) image).getRaster();
+        var dataBuffer = (DataBufferByte) raster.getDataBuffer();
+        System.arraycopy(bytes, offset, dataBuffer.getData(), 0, len);
+    }
+
     @Override
     public synchronized void paint(Graphics g) {
         //super.paint(g);

@@ -3,6 +3,7 @@ package kr.ac.hansung.remoteDesktop.connection.server;
 
 import kr.ac.hansung.remoteDesktop.connection.Session;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -17,9 +18,10 @@ public class ServerSession extends Session {
         if (videoSocket.isClosed()) return false;
 
         try {
-            var outputStream = videoSocket.getOutputStream();
-            outputStream.write(buffer, 0, buffer.length);
-            outputStream.flush();
+            var dataOutputStream = new DataOutputStream(videoSocket.getOutputStream());
+            dataOutputStream.writeInt(buffer.length);
+            dataOutputStream.write(buffer, 0, buffer.length);
+            dataOutputStream.flush();
 
         } catch (IOException e) {
             System.err.println(e.getMessage());
