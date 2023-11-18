@@ -46,11 +46,11 @@ public class RemoteScreen extends JPanel {
         this.height = height;
     }
 
-    public synchronized void setImage(Image image) {
+    public void setImage(Image image) {
         this.image = image;
     }
 
-    public synchronized void setImage(byte[] bytes) {
+    public void setImage(byte[] bytes) {
         if (this.image == null) {
             image = new BufferedImage(1920, 1080, BufferedImage.TYPE_4BYTE_ABGR);
         }
@@ -59,7 +59,7 @@ public class RemoteScreen extends JPanel {
         System.arraycopy(bytes, 0, dataBuffer.getData(), 0, bytes.length);
     }
 
-    public synchronized void setImage(byte[] bytes, int offset, int len) {
+    public void setImage(byte[] bytes, int offset, int len) {
         if (this.image == null) {
             image = new BufferedImage(1920, 1080, BufferedImage.TYPE_4BYTE_ABGR);
         }
@@ -69,7 +69,19 @@ public class RemoteScreen extends JPanel {
     }
 
     @Override
-    public synchronized void paint(Graphics g) {
+    public void update(Graphics g) {
+        super.update(g);
+        if (image == null) {
+            return;
+        }
+        g.drawImage(image, 0, 0, null);
+        long currentTime = System.nanoTime();
+        double timeElapsed = (double) (currentTime - lastDrawnTime) / 1_000_000;
+        g.drawString(String.format("%f ms", timeElapsed), 300, 400);
+    }
+
+    @Override
+    public void paint(Graphics g) {
         //super.paint(g);
         g.setFont(font);
         if (image == null) {
@@ -86,17 +98,5 @@ public class RemoteScreen extends JPanel {
         g.drawString(String.format("Expected :  %d FPS\n", (int) (1000 / timeElapsed)), DEBUG_STRING_XPOS, DEBUG_STRING_XPOS + DEFAULT_FONT_SIZE * 2);
         lastDrawnTime = currentTime;
         g.drawString(Long.toString(System.nanoTime()), 10, 10);
-    }
-
-    @Override
-    public synchronized void update(Graphics g) {
-        super.update(g);
-        if (image == null) {
-            return;
-        }
-        g.drawImage(image, 0, 0, null);
-        long currentTime = System.nanoTime();
-        double timeElapsed = (double) (currentTime - lastDrawnTime) / 1_000_000;
-        g.drawString(String.format("%f ms", timeElapsed), 300, 400);
     }
 }
