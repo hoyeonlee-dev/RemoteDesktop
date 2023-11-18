@@ -1,7 +1,5 @@
 package kr.ac.hansung.remoteDesktop.window;
 
-import kr.ac.hansung.remoteDesktop.network.message.BufferedMessage;
-import kr.ac.hansung.remoteDesktop.network.message.SendingMessage;
 import kr.ac.hansung.remoteDesktop.screenCapture.DXGIScreenCapture;
 import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
 import org.xerial.snappy.Snappy;
@@ -81,7 +79,6 @@ public class EncodingTest {
             try {
                 var             dxgiScreenCapture = new DXGIScreenCapture(1920, 1080);
                 var             outputStream      = new ObjectOutputStream(accepted.getOutputStream());
-                BufferedMessage bufferedMessage   = new SendingMessage();
                 long            lastSentTime      = System.nanoTime();
                 while (true) {
 //                    if (((System.nanoTime() - lastSentTime) / 1_000_000) < (1000 / EXPECTED_FPS)) continue;

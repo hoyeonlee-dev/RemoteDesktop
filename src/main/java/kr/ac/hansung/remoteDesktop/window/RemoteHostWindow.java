@@ -81,7 +81,7 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
 
     @Override
     public void run() {
-        IScreenCapture gdiCapture = new GDIScreenCapture(1920, 1080);
+        IScreenCapture gdiCapture  = new GDIScreenCapture(1920, 1080);
         IScreenCapture dxgiCapture = new DXGIScreenCapture(1920, 1080);
 
         var remoteScreen = new RemoteScreen(1920, 1080);
@@ -107,13 +107,10 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
                     throw new RuntimeException("존재하지 않는 캡처모드입니다.");
             }
             iScreenCapture.doCapture();
-            var buffer = iScreenCapture.getFrameBuffer();
+            var buffer   = iScreenCapture.getFrameBuffer();
             var sessions = sessionManager.getSessions();
             for (var p : sessions) {
-                try {
-                    p.getValue().sendVideo(Snappy.compress(buffer));
-                } catch (IOException e) {
-                }
+                p.getValue().sendVideo(buffer);
             }
 //            TODO: 오디오 캡처 구현하기
 //                  구현한 뒤에 이 주석을 풀 것!

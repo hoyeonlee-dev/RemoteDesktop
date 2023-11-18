@@ -21,7 +21,7 @@ public class ClientSession extends Session {
     }
 
     public boolean requestVideoSocket() {
-        var host = controlSocket.getInetAddress().getHostAddress();
+        var host        = controlSocket.getInetAddress().getHostAddress();
         var videoSocket = new Socket();
         try {
             videoSocket.connect(new InetSocketAddress(InetAddress.getByName(host), Session.VIDEO_PORT));
@@ -44,7 +44,7 @@ public class ClientSession extends Session {
     }
 
     public boolean requestAudioSocket() {
-        var host = controlSocket.getInetAddress().getHostAddress();
+        var host        = controlSocket.getInetAddress().getHostAddress();
         var audioSocket = new Socket();
         try {
             audioSocket.connect(new InetSocketAddress(InetAddress.getByName(host), Session.AUDIO_PORT));
@@ -72,11 +72,15 @@ public class ClientSession extends Session {
         if (videoSocket == null) return false;
         if (videoSocket.isClosed()) return false;
         try {
+            var inputStream  = new ObjectInputStream(videoSocket.getInputStream());
+            int length = inputStream.readInt();
+            inputStream.readNBytes(tmp, 0, length);
+            int uncompressedSize = Snappy.uncompress(tmp, 0, length, buffer, 0);
 //            if (new BufferedInputStream(videoSocket.getInputStream()).readNBytes(buffer, 0, buffer.length) == -1)
-            var dataInputStream = new DataInputStream(videoSocket.getInputStream());
-            int len = dataInputStream.readInt();
-            dataInputStream.read(tmp, 0, len);
-            Snappy.uncompress(tmp, 0, len, buffer, 0);
+//            var dataInputStream = new DataInputStream(videoSocket.getInputStream());
+//            int len             = dataInputStream.readInt();
+//            dataInputStream.read(tmp, 0, len);
+//            Snappy.uncompress(tmp, 0, len, buffer, 0);
 
         } catch (IOException e) {
             System.err.println(e.getMessage());
@@ -107,7 +111,7 @@ public class ClientSession extends Session {
             ClientSession clientSession = null;
             try {
                 Socket controlSocket = new Socket(address, CONTROL_PORT);
-                var reader = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
+                var    reader        = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
                 clientSession = new ClientSession(reader.readLine(), controlSocket);
             } catch (IOException e) {
                 System.err.println(e.getMessage());
