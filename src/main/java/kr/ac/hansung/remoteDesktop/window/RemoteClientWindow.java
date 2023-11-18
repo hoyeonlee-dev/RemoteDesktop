@@ -4,9 +4,13 @@ import kr.ac.hansung.remoteDesktop.connection.client.ClientSession;
 import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
 import kr.ac.hansung.remoteDesktop.window.event.StopStreamingOnClose;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 public class RemoteClientWindow implements IRDPWindow, Runnable {
     private final JFrame clientWindow;
@@ -85,8 +89,16 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
 
         showClient();
         while (!shouldStop) {
-            clientSession.receiveVideo(getBuffer());
-            update();
+            int len = clientSession.receiveVideo(getBuffer());
+            if(len == -1) continue;
+//            try {
+////                remoteScreen.setImage(ImageIO.read(new ByteArrayInputStream(getBuffer(), 0, len)));
+//                remoteScreen.setImage(Toolkit.getDefaultToolkit().createImage(getBuffer()));
+//                remoteScreen.repaint();
+//            } catch (IOException e) {
+//            }
+            remoteScreen.setImage(Toolkit.getDefaultToolkit().createImage(getBuffer()));
+            remoteScreen.repaint();
         }
     }
 }

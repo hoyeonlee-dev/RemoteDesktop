@@ -92,9 +92,10 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
         new Thread(new AudioServer(sessionManager, Session.AUDIO_PORT)).start();
         new Thread(new VideoServer(sessionManager, Session.VIDEO_PORT)).start();
         new Thread(new ControlServer(sessionManager, Session.CONTROL_PORT)).start();
-
+        long lastSent = System.nanoTime();
         showClient();
         while (!shouldStop) {
+//            if(((System.nanoTime() - lastSent)/1_000_000) < 33.3)continue;
             IScreenCapture iScreenCapture = null;
             switch (captureMode) {
                 case 0:
@@ -110,13 +111,14 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
             var buffer   = iScreenCapture.getFrameBuffer();
             var sessions = sessionManager.getSessions();
             for (var p : sessions) {
-                p.getValue().sendVideo(buffer);
+                p.getValue().sendVideo(buffer, 1920, 1080);
             }
 //            TODO: 오디오 캡처 구현하기
 //                  구현한 뒤에 이 주석을 풀 것!
 //            for (var p : sessions) {
 //                p.getValue().sendAudio(buffer);
 //            }
+            lastSent = System.nanoTime();
             remoteScreen.setImage(buffer);
             remoteScreen.repaint();
         }

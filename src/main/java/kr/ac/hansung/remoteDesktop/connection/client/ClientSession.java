@@ -66,27 +66,25 @@ public class ClientSession extends Session {
         return true;
     }
 
-    byte[] tmp = new byte[20 * 1024 * 1024];
+    byte[]             tmp         = new byte[20 * 1024 * 1024];
+    ObjectInputStream inputStream = null;
 
-    public boolean receiveVideo(byte[] buffer) {
-        if (videoSocket == null) return false;
-        if (videoSocket.isClosed()) return false;
+    public int receiveVideo(byte[] buffer) {
+        if (videoSocket == null) return -1;
+        if (videoSocket.isClosed()) return -1;
         try {
-            var inputStream  = new ObjectInputStream(videoSocket.getInputStream());
+            if (inputStream == null)
+                inputStream = new ObjectInputStream(videoSocket.getInputStream());
             int length = inputStream.readInt();
             inputStream.readNBytes(tmp, 0, length);
-            int uncompressedSize = Snappy.uncompress(tmp, 0, length, buffer, 0);
-//            if (new BufferedInputStream(videoSocket.getInputStream()).readNBytes(buffer, 0, buffer.length) == -1)
-//            var dataInputStream = new DataInputStream(videoSocket.getInputStream());
-//            int len             = dataInputStream.readInt();
-//            dataInputStream.read(tmp, 0, len);
-//            Snappy.uncompress(tmp, 0, len, buffer, 0);
-
+            System.arraycopy(tmp, 0, buffer, 0, length);
+//            System.out.printf("client: %d \n", length);
+            return length;
         } catch (IOException e) {
+            e.printStackTrace();
             System.err.println(e.getMessage());
-            return false;
+            return -1;
         }
-        return true;
     }
 
     public boolean receiveAudio(byte[] buffer) {
