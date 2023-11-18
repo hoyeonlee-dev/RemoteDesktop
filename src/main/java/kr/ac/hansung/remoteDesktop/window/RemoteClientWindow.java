@@ -73,7 +73,7 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
     public void run() {
         ClientSession clientSession = null;
         while (clientSession == null) {
-            clientSession = ClientSession.Factory.createClientSession("localhost");
+            clientSession = ClientSession.Factory.createClientSession("192.168.1.117");
         }
         System.out.println("연결했습니다.");
         while (!clientSession.requestVideoSocket()) {

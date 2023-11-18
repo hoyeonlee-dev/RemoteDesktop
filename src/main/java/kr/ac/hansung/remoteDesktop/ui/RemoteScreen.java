@@ -52,7 +52,7 @@ public class RemoteScreen extends JPanel {
 
     public void setImage(byte[] bytes) {
         if (this.image == null) {
-            image = new BufferedImage(1920, 1080, BufferedImage.TYPE_4BYTE_ABGR);
+            image = new BufferedImage(1920, 1080, BufferedImage.TYPE_3BYTE_BGR);
         }
         var raster = ((BufferedImage) image).getRaster();
         var dataBuffer = (DataBufferByte) raster.getDataBuffer();
