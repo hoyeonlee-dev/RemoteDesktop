@@ -1,12 +1,15 @@
 package kr.ac.hansung.remoteDesktop.connection.client;
 
 import kr.ac.hansung.remoteDesktop.connection.Session;
-import org.xerial.snappy.Snappy;
+import kr.ac.hansung.remoteDesktop.connection.server.FileServer;
+import kr.ac.hansung.remoteDesktop.network.message.*;
 
 import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClientSession extends Session {
     private String sessionID;
@@ -66,7 +69,7 @@ public class ClientSession extends Session {
         return true;
     }
 
-    byte[]             tmp         = new byte[20 * 1024 * 1024];
+    byte[]            tmp         = new byte[20 * 1024 * 1024];
     ObjectInputStream inputStream = null;
 
     public int receiveVideo(byte[] buffer) {
@@ -75,7 +78,12 @@ public class ClientSession extends Session {
         try {
             if (inputStream == null)
                 inputStream = new ObjectInputStream(videoSocket.getInputStream());
-            int length = inputStream.readInt();
+            var imageInfo = (ImageInfo) inputStream.readObject();
+            if (imageInfo.imageType() == ImageType.NO_UPDATE) {
+                return 0;
+            }
+            int length = imageInfo.size();
+            if (length == 0) return tmp.length;
             inputStream.readNBytes(tmp, 0, length);
             System.arraycopy(tmp, 0, buffer, 0, length);
 //            System.out.printf("client: %d \n", length);
@@ -84,15 +92,22 @@ public class ClientSession extends Session {
             e.printStackTrace();
             System.err.println(e.getMessage());
             return -1;
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return -1;
         }
     }
 
-    public boolean receiveAudio(byte[] buffer) {
+    public byte[] audioBuffer = null;
+
+    public boolean receiveAudio() {
         if (audioSocket == null) return false;
         if (audioSocket.isClosed()) return false;
-        try {
-            if (audioSocket.getInputStream().read(buffer) == -1)
-                return false;
+        try (var objectInputStream = new ObjectInputStream(audioSocket.getInputStream())) {
+            if (audioBuffer == null) {
+                audioBuffer = new byte[objectInputStream.readInt()];
+            }
+            objectInputStream.read(audioBuffer, 0, audioBuffer.length);
         } catch (IOException e) {
             System.err.println(e.getMessage());
             return false;
@@ -100,9 +115,56 @@ public class ClientSession extends Session {
         return true;
     }
 
-    public boolean sendCommand() {
-        return false;
+
+    public Socket requestFileSocket() throws IOException {
+        var address = controlSocket.getInetAddress().getHostAddress();
+        return new Socket(address, FileServer.FILE_PORT);
     }
+
+    public void sendFileTransferRequest(List<File> files) throws IOException {
+        var socket       = requestFileSocket();
+        var inputStream  = socket.getInputStream();
+        var outputStream = socket.getOutputStream();
+
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+        ObjectInputStream  objectInputStream  = new ObjectInputStream(inputStream);
+
+        var names = new ArrayList<String>();
+
+        for (var file : files) {
+            names.add(file.getName());
+        }
+        objectOutputStream.writeObject(new FileSendRequest(sessionID, names));
+        objectOutputStream.flush();
+        try {
+            var response = (FileSendResponse) objectInputStream.readObject();
+            if (response.type() == FileSendResponse.Type.OK) {
+                System.out.println("서버에서 파일 전송을 승인했습니다.");
+                sendFiles(objectOutputStream, files);
+            } else if (response.type() == FileSendResponse.Type.DENIED) {
+                System.out.println("서버에서 파일 전송을 거절했습니다..");
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendFiles(ObjectOutputStream objectOutputStream, List<File> files) {
+        for (var file : files) {
+            try {
+                var fileInputStream = new FileInputStream(file);
+                if (!file.exists()) {
+                    objectOutputStream.writeObject(new FileMessage(file.getName(), new byte[10]));
+                    continue;
+                }
+                objectOutputStream.writeObject(new FileMessage(file.getName(), fileInputStream.readAllBytes()));
+                objectOutputStream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     public static class Factory {
         public static ClientSession createClientSession(String address) {
@@ -111,6 +173,9 @@ public class ClientSession extends Session {
                 Socket controlSocket = new Socket(address, CONTROL_PORT);
                 var    reader        = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
                 clientSession = new ClientSession(reader.readLine(), controlSocket);
+                while (!clientSession.requestVideoSocket()) {
+                }
+                ;
             } catch (IOException e) {
                 System.err.println(e.getMessage());
                 return null;

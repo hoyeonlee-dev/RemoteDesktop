@@ -100,8 +100,8 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
     }
 
     @Override
-    public void doCapture() {
-        getCapturedScreenByteArray();
-    }
 
+    public boolean doCapture() {
+        return getCapturedScreenByteArray();
+    }
 }

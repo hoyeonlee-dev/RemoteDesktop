@@ -34,7 +34,6 @@ public class SessionManager {
         if (session == null) return false;
         switch (type) {
             case VIDEO -> session.setVideoSocket(socket);
-            case AUDIO -> session.setAudioSocket(socket);
             case CONTROL -> session.setControlSocket(socket);
         }
         return true;

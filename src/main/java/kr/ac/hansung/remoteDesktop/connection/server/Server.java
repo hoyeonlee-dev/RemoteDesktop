@@ -9,12 +9,13 @@ import java.net.Socket;
 
 public abstract class Server implements Runnable {
     private final int port;
-    private final SessionManager sessionManager;
 
-    protected ConnectionType connectionType;
+    private final SessionManager sessionManager;
+    protected     ConnectionType connectionType;
+    private       ServerSocket   serverSocket;
 
     public Server(SessionManager sessionManager, int port) {
-        this.port = port;
+        this.port           = port;
         this.sessionManager = sessionManager;
     }
 
@@ -22,8 +23,10 @@ public abstract class Server implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
-            try (ServerSocket serverSocket = new ServerSocket(port)) {
+
+        try {
+            serverSocket = new ServerSocket(port);
+            while (true) {
                 var accepted = serverSocket.accept();
                 new Thread(() -> {
                     var sessionID = getSessionID(accepted);
@@ -38,10 +41,14 @@ public abstract class Server implements Runnable {
                         System.err.println("Attach에 실패했습니다.");
                     }
                 }).start();
-            } catch (IOException e) {
-                System.err.println(e.getMessage());
             }
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
+    }
+
+    public void stopServer() throws IOException {
+        if (!serverSocket.isClosed()) serverSocket.close();
     }
 
 }

@@ -83,7 +83,8 @@ public class GDIScreenCapture implements IScreenCapture, ICaptureResult {
     }
 
     @Override
-    public void doCapture() {
+    public boolean doCapture() {
         getCapturedScreenByteArray();
+        return true;
     }
 }
