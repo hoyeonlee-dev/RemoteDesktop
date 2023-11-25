@@ -3,6 +3,7 @@ package kr.ac.hansung.remoteDesktop.window;
 import kr.ac.hansung.remoteDesktop.connection.Session;
 import kr.ac.hansung.remoteDesktop.connection.server.*;
 import kr.ac.hansung.remoteDesktop.screenCapture.DXGIScreenCapture;
+import kr.ac.hansung.remoteDesktop.screenCapture.DisplaySetting;
 import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
 import kr.ac.hansung.remoteDesktop.window.event.OnFileReceivedListener;
 import kr.ac.hansung.remoteDesktop.window.event.StopStreamingOnClose;
@@ -116,12 +117,17 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
         }
     }
 
+    DisplaySetting displaySetting;
+
     /**
      * 스크린 캡처를 초기화합니다.
      */
     private void initScreenCapture() {
-        dxgiCapture = new DXGIScreenCapture(1920, 1080);
         // native resize call
+        displaySetting = new DisplaySetting();
+        displaySetting.backDisplaySettings();
+        displaySetting.resize(1920, 1080, 60);
+        dxgiCapture = new DXGIScreenCapture(1920, 1080);
     }
 
     /**
@@ -129,6 +135,7 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
      */
     private void deInitScreenCapture() {
         // native resize call
+        displaySetting.restore();
 
     }
 
