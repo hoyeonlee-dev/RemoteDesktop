@@ -5,8 +5,13 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.Socket;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 
 class HintTextField extends JTextField {
     private String hint;
@@ -64,6 +69,8 @@ public class MyWindow extends JFrame {
     private boolean settingsVisible = false;
     private boolean clientVisible = true;
     private boolean hostVisible = false;
+    
+    private Socket serverSocket;
 
     public MyWindow(int port) {
         super("window");
@@ -120,59 +127,137 @@ public class MyWindow extends JFrame {
         return p;
     }
 
-    private JPanel createComputersPanel() {
-        JPanel p = new JPanel();
-        p.setBackground(Color.DARK_GRAY);
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+	private JPanel createComputersPanel() {
+	    JPanel p = new JPanel();
+	    p.setBackground(Color.DARK_GRAY);
+	    p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+	
+	    JLabel c = new JLabel("Computers");
+	    c.setForeground(Color.WHITE);
+	    c.setFont(new Font("SansSerif", Font.PLAIN, 50));
+	    p.add(c);
+	
+	    JLabel d = new JLabel("Connect to your computer or a friend's computer in low latency desktop mode.");
+	    d.setForeground(Color.WHITE);
+	    d.setFont(new Font("SansSerif", Font.PLAIN, 20));
+	    p.add(d);
+	
+	    JPanel s = new JPanel();
+	    s.setBackground(Color.DARK_GRAY);
+	    s.setLayout(new FlowLayout());
+	
+	    HintTextField t_search = new HintTextField("Search Hosts and Computers");
+	    t_search.setColumns(40);
+	    t_search.setFont(new Font("SansSerif", Font.PLAIN, 15));
+	    s.add(t_search);
+	
+	    s.add(Box.createRigidArea(new Dimension(0, 10)));
+	
+	    JPanel buttonPanel = new JPanel();
+	    buttonPanel.setBackground(Color.DARK_GRAY);
+	
+	    JButton plusButton = new JButton("+");
+	    Font buttonFont = new Font("SansSerif", Font.PLAIN, 20);
+	    plusButton.setFont(buttonFont);
+	    Dimension buttonSize = new Dimension(50, 30);
+	    plusButton.setPreferredSize(buttonSize);
+	    plusButton.setBackground(Color.DARK_GRAY);
+	    plusButton.setForeground(Color.WHITE);
+	
+	    plusButton.addActionListener(new ActionListener() {
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+	            card2Panel.remove(computers2Panel);
+	            card2Panel.add(createConnectPanel(), "connectPanel");
+	            CardLayout card2Layout = (CardLayout) card2Panel.getLayout();
+	            card2Layout.show(card2Panel, "connectPanel");
+	            card2Panel.revalidate();
+	            card2Panel.repaint();
+	        }
+	    });
+	
+	    JButton reloadButton = new JButton("Reload");
+	    Font reloadButtonFont = new Font("SansSerif", Font.PLAIN, 15);
+	    reloadButton.setFont(reloadButtonFont);
+	    Dimension reloadButtonSize = new Dimension(90, 30);
+	    reloadButton.setPreferredSize(reloadButtonSize);
+	    reloadButton.setBackground(Color.DARK_GRAY);
+	    reloadButton.setForeground(Color.WHITE);
+	
+	    buttonPanel.add(plusButton);
+	    buttonPanel.add(reloadButton);
+	    s.add(buttonPanel);
+	
+	    p.add(s);
+	
+	    return p;
+	}
+	
+	private JPanel createConnectPanel() {
+	    JPanel p = new JPanel() {
+	        @Override
+	        public Dimension getPreferredSize() {
+	            return new Dimension(200, 550);
+	        }
+	    };
+	    p.setBackground(Color.DARK_GRAY);
+	    p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 
-        JLabel c = new JLabel("Computers");
-        c.setForeground(Color.WHITE);
-        c.setFont(new Font("SansSerif", Font.PLAIN, 50));
-        p.add(c);
+	    JButton connectButton = new JButton("연결하기");
+	    Font connectButtonFont = new Font("SansSerif", Font.PLAIN, 15);
+	    connectButton.setFont(connectButtonFont);
+	    Dimension connectButtonSize = new Dimension(90, 30);
+	    connectButton.setPreferredSize(connectButtonSize);
+	    connectButton.setBackground(Color.DARK_GRAY);
+	    connectButton.setForeground(Color.WHITE);
 
-        JLabel d = new JLabel("Connect to your computer or a friend's computer in low latency desktop mode.");
-        d.setForeground(Color.WHITE);
-        d.setFont(new Font("SansSerif", Font.PLAIN, 20));
-        p.add(d);
+	    connectButton.addActionListener(new ActionListener() {
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+	            // 서버에 소켓을 통해 접속
+	            try {
+	                serverSocket = new Socket("localhost", 12345);
 
-        JPanel s = new JPanel();
-        s.setBackground(Color.DARK_GRAY);
-        s.setLayout(new FlowLayout());
+	                // 서버에 연결 성공 시 원격 제어 창
+	                openRemoteControlFrame(serverSocket);
+	            } catch (IOException ex) {
+	                ex.printStackTrace();
+	            }
+	        }
+	    });
 
-        HintTextField t_search = new HintTextField("Search Hosts and Computers");
-        t_search.setColumns(40);
-        t_search.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        s.add(t_search);
+	    p.add(connectButton);
 
-        s.add(Box.createRigidArea(new Dimension(0, 10)));
+	    return p;
+	}
+	
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBackground(Color.DARK_GRAY);
 
-        JButton plusButton = new JButton("+");
-        Font buttonFont = new Font("SansSerif", Font.PLAIN, 20);
-        plusButton.setFont(buttonFont);
-        Dimension buttonSize = new Dimension(50, 30);
-        plusButton.setPreferredSize(buttonSize);
-        plusButton.setBackground(Color.DARK_GRAY);
-        plusButton.setForeground(Color.WHITE);
+	private void openRemoteControlFrame(Socket serverSocket) {
+		
+		RemoteMessage message = new RemoteMessage(RemoteMessageType.INPUT_MODE, null);
+	    try {
+	        // 서버에 소켓을 통해 접속
+	        RemoteMouseSender remoteMouseSender = new RemoteMouseSender(serverSocket);
 
-        JButton reloadButton = new JButton("Reload");
-        Font reloadButtonFont = new Font("SansSerif", Font.PLAIN, 15);
-        reloadButton.setFont(reloadButtonFont);
-        Dimension reloadButtonSize = new Dimension(90, 30);
-        reloadButton.setPreferredSize(reloadButtonSize);
-        reloadButton.setBackground(Color.DARK_GRAY);
-        reloadButton.setForeground(Color.WHITE);
+	        // RemoteControlFrame을 생성하면서 remoteMouseSender 전달
+	        RemoteControlFrame controlFrame = new RemoteControlFrame(serverSocket);
 
-        buttonPanel.add(plusButton);
-        buttonPanel.add(reloadButton);
-        s.add(buttonPanel);
+	        // JFrame에 RemoteControlFrame을 추가
+	        JFrame remoteControlFrame = new JFrame("원격 제어");
+	        remoteControlFrame.add(controlFrame);
 
-        p.add(s);
+	        // 예시: 빈 창을 생성
+	        remoteControlFrame.setSize(1920, 1080);
+	        remoteControlFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	        remoteControlFrame.setLocationRelativeTo(null);
+	        remoteControlFrame.setVisible(true);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
 
-        return p;
-    }
+
 
     private JPanel createComputers2Panel() {
         JPanel p = new JPanel() {
