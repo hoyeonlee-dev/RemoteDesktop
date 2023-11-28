@@ -25,3 +25,8 @@ tasks.withType(JavaCompile).configureEach {
 test {
     useJUnitPlatform()
 }
+jar{
+    manifest{
+        attributes 'Main-Class':'kr.ac.hansung.remoteDesktop.window.MainWindow'
+    }
+}

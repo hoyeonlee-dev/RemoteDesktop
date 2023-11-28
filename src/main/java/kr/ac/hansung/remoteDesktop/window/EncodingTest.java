@@ -37,7 +37,7 @@ public class EncodingTest {
                 jframe.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 jframe.setVisible(true);
 
-                try (Socket socket = new Socket("192.168.1.117", 10240)) {
+                try (Socket socket = new Socket("223.194.128.202", 10240)) {
                     var outputStream = socket.getOutputStream();
                     var inputStream  = new ObjectInputStream(socket.getInputStream());
                     while (true) {

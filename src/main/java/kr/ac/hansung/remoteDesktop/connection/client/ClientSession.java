@@ -98,6 +98,17 @@ public class ClientSession extends Session {
         }
     }
 
+    ObjectInputStream controlObjectInputStream = null;
+
+    public MousePosition receiveMousePosition() {
+        try {
+            if (controlObjectInputStream == null) controlObjectInputStream = new ObjectInputStream(controlSocket.getInputStream());
+            return (MousePosition) controlObjectInputStream.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            return null;
+        }
+    }
+
     public byte[] audioBuffer = null;
 
     public boolean receiveAudio() {
@@ -175,7 +186,7 @@ public class ClientSession extends Session {
                 clientSession = new ClientSession(reader.readLine(), controlSocket);
                 while (!clientSession.requestVideoSocket()) {
                 }
-                ;
+
             } catch (IOException e) {
                 System.err.println(e.getMessage());
                 return null;

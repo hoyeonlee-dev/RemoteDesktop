@@ -43,8 +43,13 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
         shouldStop = false;
     }
 
+    private static DisplaySetting displaySettings = new DisplaySetting();
+
     public static void main(String[] args) {
         new Thread(new RemoteHostWindow("원격 호스트")).start();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            displaySettings.restore();
+        }));
     }
 
     @Override
@@ -77,8 +82,8 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
         add(remoteScreen, BorderLayout.CENTER);
 
         sessionManager = new SessionManager();
-        videoServer    = new VideoServer(sessionManager, Session.VIDEO_PORT);
-        controlServer  = new ControlServer(sessionManager, Session.CONTROL_PORT);
+        videoServer = new VideoServer(sessionManager, Session.VIDEO_PORT);
+        controlServer = new ControlServer(sessionManager, Session.CONTROL_PORT);
 
         fileServer = new FileServer(new OnFileReceivedListener(hostWindow, sessionManager));
 
@@ -126,7 +131,7 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
         // native resize call
         displaySetting = new DisplaySetting();
         displaySetting.backDisplaySettings();
-        displaySetting.resize(1920, 1080, 60);
+//        displaySetting.resize(1920, 1080, 60);
         dxgiCapture = new DXGIScreenCapture(1920, 1080);
     }
 
@@ -155,7 +160,13 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
         if (diff > 1000) {
             System.out.printf("지난 %.3f초동안 %d 프레임 전송\r", diff, ++count);
             lastSecond = System.nanoTime();
-            count      = 0;
+            count = 0;
+        }
+    }
+
+    public void sendMousePosition(Set<Map.Entry<String, ServerSession>> sessions, int x, int y) {
+        for (var p : sessions) {
+            p.getValue().sendMousePosition(x, y);
         }
     }
 
@@ -194,19 +205,14 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
 
         waitUntilClientConnection(); // 클라이언트가 접속할 때까지 대기
 
+        displaySettings.backDisplaySettings();
+
         initScreenCapture();
 
         showClient(); //클라이언트가 접속하면 화면을 보여줌
 
         var sessions = sessionManager.getSessions();
 
-        new Thread(() -> {
-            while (true) {
-                for (var session : sessions) {
-                    session.getValue().checkFileTransferRequest();
-                }
-            }
-        }).start();
 
         long lastSent = System.nanoTime();
 
@@ -221,13 +227,21 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
 
             if (savedBuffer == null) savedBuffer = new byte[capturedImage.length];
 
+            Point mousePosition = MouseInfo.getPointerInfo().getLocation();
+
             if (wasImageUpdated(capturedImage, savedBuffer)) {
                 updateImage(capturedImage);
                 sendVideo(sessions);
+                sendMousePosition(sessions, mousePosition.x, mousePosition.y);
                 printStatics();
             } else {
                 sendNoUpdate(sessions);
             }
+
+            remoteScreen.setMouseX(mousePosition.x);
+            remoteScreen.setMouseY(mousePosition.y);
+
+            System.out.printf("%d, %d\r", mousePosition.x, mousePosition.y);
 
             lastSent = System.nanoTime();
             drawImage();

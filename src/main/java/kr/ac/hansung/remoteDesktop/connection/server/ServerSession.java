@@ -5,6 +5,7 @@ import kr.ac.hansung.remoteDesktop.connection.Session;
 import kr.ac.hansung.remoteDesktop.network.message.FileSendRequest;
 import kr.ac.hansung.remoteDesktop.network.message.ImageInfo;
 import kr.ac.hansung.remoteDesktop.network.message.ImageType;
+import kr.ac.hansung.remoteDesktop.network.message.MousePosition;
 import org.libjpegturbo.turbojpeg.TJ;
 import org.libjpegturbo.turbojpeg.TJCompressor;
 
@@ -26,22 +27,34 @@ public class ServerSession extends Session {
         compressBuffer = new byte[20 * 1024 * 1024];
     }
 
-    BufferedImage         bufferedImage         = null;
-    ImageOutputStream     imageOutputStream     = null;
-    ByteArrayOutputStream byteArrayOutputStream = null;
-    ObjectOutputStream    objectOutputStream    = null;
+    BufferedImage         bufferedImage             = null;
+    ImageOutputStream     imageOutputStream         = null;
+    ByteArrayOutputStream byteArrayOutputStream     = null;
+    ObjectOutputStream    videoInfoOutputStream     = null;
+    ObjectOutputStream    controlObjectOutputStream = null;
 
     public void sendNoUpdate() {
         if (videoSocket == null) return;
         if (videoSocket.isClosed()) return;
         try {
-            if (objectOutputStream == null) objectOutputStream = new ObjectOutputStream(videoSocket.getOutputStream());
-            objectOutputStream.writeObject(new ImageInfo(ImageType.NO_UPDATE, -1));
-            objectOutputStream.flush();
+            if (videoInfoOutputStream == null) videoInfoOutputStream = new ObjectOutputStream(videoSocket.getOutputStream());
+            videoInfoOutputStream.writeObject(new ImageInfo(ImageType.NO_UPDATE, -1));
+            videoInfoOutputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    public void sendMousePosition(int x, int y) {
+        if (controlSocket == null) return;
+        if (controlSocket.isClosed()) return;
+        try {
+            if (controlObjectOutputStream == null) controlObjectOutputStream = new ObjectOutputStream(controlSocket.getOutputStream());
+            controlObjectOutputStream.writeObject(new MousePosition(x, y));
+            controlObjectOutputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public boolean sendVideo(byte[] buffer, int width, int height) {
@@ -52,7 +65,7 @@ public class ServerSession extends Session {
                 || bufferedImage.getHeight() != height) bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         if (buffer.length == 0) {
             try {
-                objectOutputStream.writeInt(0);
+                videoInfoOutputStream.writeInt(0);
                 return true;
             } catch (IOException e) {
             }
@@ -66,11 +79,11 @@ public class ServerSession extends Session {
             compressor.set(TJ.PARAM_FASTDCT, 1);
             compressor.compress(compressBuffer);
 
-            if (objectOutputStream == null) objectOutputStream = new ObjectOutputStream(videoSocket.getOutputStream());
+            if (videoInfoOutputStream == null) videoInfoOutputStream = new ObjectOutputStream(videoSocket.getOutputStream());
 
-            objectOutputStream.writeObject(new ImageInfo(ImageType.UPDATE, compressor.getCompressedSize()));
-            objectOutputStream.write(compressBuffer, 0, compressor.getCompressedSize());
-            objectOutputStream.flush();
+            videoInfoOutputStream.writeObject(new ImageInfo(ImageType.UPDATE, compressor.getCompressedSize()));
+            videoInfoOutputStream.write(compressBuffer, 0, compressor.getCompressedSize());
+            videoInfoOutputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
             return false;

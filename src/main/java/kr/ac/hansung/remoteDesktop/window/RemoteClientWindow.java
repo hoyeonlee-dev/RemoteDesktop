@@ -109,7 +109,8 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
 
     private void init() {
         while (clientSession == null) {
-            clientSession = ClientSession.Factory.createClientSession("192.168.1.117");
+            clientSession = ClientSession.Factory.createClientSession("223.194.128.202");
+//            clientSession = ClientSession.Factory.createClientSession("172.29.228.68");
         }
         System.out.println("연결했습니다.");
     }
@@ -117,6 +118,13 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
     @Override
     public void run() {
         init();
+        new Thread(() -> {
+            while (true) {
+                var mousePosition = clientSession.receiveMousePosition();
+                remoteScreen.setMouseX(mousePosition.x());
+                remoteScreen.setMouseY(mousePosition.y());
+            }
+        }).start();
 
         showClient();
 
