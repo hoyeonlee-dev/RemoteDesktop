@@ -22,8 +22,8 @@ public class ServerSession extends Session {
 
     byte[] compressBuffer;
 
-    public ServerSession(Socket videoSocket, Socket audioSocket, Socket controlSocket) {
-        super(videoSocket, audioSocket, controlSocket);
+    public ServerSession(Socket videoSocket,  Socket controlSocket) {
+        super(videoSocket,  controlSocket);
         compressBuffer = new byte[20 * 1024 * 1024];
     }
 
@@ -86,20 +86,6 @@ public class ServerSession extends Session {
             videoInfoOutputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
-    public boolean sendAudio(byte[] buffer) {
-        if (audioSocket == null) return false;
-        if (audioSocket.isClosed()) return false;
-        try (var objectOutputStream = new ObjectOutputStream(audioSocket.getOutputStream())) {
-            objectOutputStream.writeInt(buffer.length);
-            objectOutputStream.write(buffer, 0, buffer.length);
-            objectOutputStream.flush();
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
             return false;
         }
         return true;

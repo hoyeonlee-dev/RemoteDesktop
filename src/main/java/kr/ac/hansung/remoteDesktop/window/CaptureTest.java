@@ -1,7 +1,6 @@
 package kr.ac.hansung.remoteDesktop.window;
 
 import kr.ac.hansung.remoteDesktop.screenCapture.DXGIScreenCapture;
-import kr.ac.hansung.remoteDesktop.screenCapture.GDIScreenCapture;
 import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
 
 import javax.imageio.ImageIO;
@@ -22,7 +21,6 @@ public class CaptureTest {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
-        var gdiCapture = new GDIScreenCapture(1920, 1080);
         var dxgiCapture = new DXGIScreenCapture(1920, 1080);
         dxgiCapture.setFrameRate(100);
 

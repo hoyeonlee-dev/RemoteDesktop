@@ -26,13 +26,13 @@ public class DisplaySetting {
         nativeResize(savedWidth, savedHeight, savedRefreshRate);
     }
 
-    public void backDisplaySettings() {
+    public void backupDisplaySettings() {
         nativeBackupDisplaySettings();
     }
 
     public static void main(String[] args) throws InterruptedException {
         var setting = new DisplaySetting();
-        setting.backDisplaySettings();
+        setting.backupDisplaySettings();
         System.out.printf("width : %d, height : %d\n", setting.savedWidth, setting.savedHeight);
         setting.nativeResize(1920, 1080, 60);
         Thread.sleep(20000);

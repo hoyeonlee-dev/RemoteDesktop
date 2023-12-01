@@ -15,12 +15,12 @@ public class ClientSession extends Session {
     private String sessionID;
 
     public ClientSession(String sessionID, Socket controlSocket) {
-        this(null, null, controlSocket);
+        this((Socket) null, controlSocket);
         this.sessionID = sessionID;
     }
 
-    private ClientSession(Socket videoSocket, Socket audioSocket, Socket controlSocket) {
-        super(videoSocket, audioSocket, controlSocket);
+    private ClientSession(Socket videoSocket, Socket controlSocket) {
+        super(videoSocket, controlSocket);
     }
 
     public boolean requestVideoSocket() {
@@ -46,30 +46,8 @@ public class ClientSession extends Session {
         return true;
     }
 
-    public boolean requestAudioSocket() {
-        var host        = controlSocket.getInetAddress().getHostAddress();
-        var audioSocket = new Socket();
-        try {
-            audioSocket.connect(new InetSocketAddress(InetAddress.getByName(host), Session.AUDIO_PORT));
-            var writer = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(audioSocket.getOutputStream())));
-            writer.println(sessionID);
-            writer.flush();
-            this.audioSocket = audioSocket;
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            if (audioSocket.isConnected()) {
-                try {
-                    audioSocket.close();
-                } catch (IOException ignored) {
-                }
-            }
-            audioSocket = null;
-            return false;
-        }
-        return true;
-    }
+    byte[] tmp = new byte[20 * 1024 * 1024];
 
-    byte[]            tmp         = new byte[20 * 1024 * 1024];
     ObjectInputStream inputStream = null;
 
     public int receiveVideo(byte[] buffer) {
@@ -108,24 +86,6 @@ public class ClientSession extends Session {
             return null;
         }
     }
-
-    public byte[] audioBuffer = null;
-
-    public boolean receiveAudio() {
-        if (audioSocket == null) return false;
-        if (audioSocket.isClosed()) return false;
-        try (var objectInputStream = new ObjectInputStream(audioSocket.getInputStream())) {
-            if (audioBuffer == null) {
-                audioBuffer = new byte[objectInputStream.readInt()];
-            }
-            objectInputStream.read(audioBuffer, 0, audioBuffer.length);
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            return false;
-        }
-        return true;
-    }
-
 
     public Socket requestFileSocket() throws IOException {
         var address = controlSocket.getInetAddress().getHostAddress();
@@ -175,7 +135,6 @@ public class ClientSession extends Session {
             }
         }
     }
-
 
     public static class Factory {
         public static ClientSession createClientSession(String address) {

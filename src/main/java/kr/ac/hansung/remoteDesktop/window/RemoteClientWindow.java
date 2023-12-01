@@ -3,6 +3,7 @@ package kr.ac.hansung.remoteDesktop.window;
 import kr.ac.hansung.remoteDesktop.connection.client.ClientSession;
 import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
 import kr.ac.hansung.remoteDesktop.window.event.FileDropListener;
+import kr.ac.hansung.remoteDesktop.window.event.FileDropListenerActionImpl;
 import kr.ac.hansung.remoteDesktop.window.event.StopStreamingOnClose;
 
 import javax.imageio.ImageIO;
@@ -11,43 +12,34 @@ import java.awt.*;
 import java.awt.dnd.DropTarget;
 import java.awt.event.WindowEvent;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class RemoteClientWindow implements IRDPWindow, Runnable {
-    private final JFrame       clientWindow;
-    private final RemoteScreen remoteScreen;
+    private JFrame clientWindow;
     byte[] buffer = null;
+    private final RemoteScreen remoteScreen;
+
+    private final String address;
+
+    FileDropListener.FileDropAction fileDropAction;
     private boolean shouldStop;
-    FileDropListener.FileDropAction defaultFileDropAction = new FileDropListener.FileDropAction() {
-        @Override
-        public void fileDropped(File file) {
-            var files = new ArrayList<File>();
-            files.add(file);
-            new Thread(() -> {
-                try {
-                    clientSession.sendFileTransferRequest(files);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-        }
 
-        @Override
-        public void fileDropped(List<File> files) {
-            new Thread(() -> {
-                try {
-                    clientSession.sendFileTransferRequest(files);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-        }
-    };
+    public RemoteClientWindow(String title, String address) {
+        remoteScreen = createWindow(title);
+        this.address = address;
+        shouldStop   = false;
 
-    public RemoteClientWindow(String title) {
+        buffer = new byte[1920 * 1080 * 4];
+    }
+
+    public void setTitle(String title) {
+        if (clientWindow != null) {
+            clientWindow.setTitle(title);
+        }
+    }
+
+    private RemoteScreen createWindow(String title) {
+        final RemoteScreen remoteScreen;
         clientWindow = new JFrame(title);
         clientWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         clientWindow.setLayout(new BorderLayout());
@@ -58,24 +50,20 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
         clientWindow.addWindowListener(new StopStreamingOnClose(this));
 
         clientWindow.setVisible(true);
+
         clientWindow.addWindowStateListener(e -> {
             if (e.getNewState() == WindowEvent.WINDOW_CLOSING)
                 shouldStop = true;
         });
-        var fileDropListener = new FileDropListener();
-        fileDropListener.addFileDropAction(defaultFileDropAction);
-        new DropTarget(clientWindow, fileDropListener);
-        shouldStop = false;
-
-        buffer = new byte[1920 * 1080 * 4];
-    }
-
-    public static void main(String[] args) {
-        new Thread(new RemoteClientWindow("클라이언트")).start();
+        return remoteScreen;
     }
 
     public void showClient() {
         clientWindow.setVisible(true);
+    }
+
+    public void hideClient() {
+        clientWindow.setVisible(false);
     }
 
     @Override
@@ -88,8 +76,8 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
 
     }
 
-    public void hideClient() {
-        clientWindow.setVisible(false);
+    public void add(Component component, Object constraints) {
+        clientWindow.add(component, constraints);
     }
 
     public byte[] getBuffer() {
@@ -101,16 +89,16 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
         remoteScreen.repaint();
     }
 
-    public void add(Component component, Object constraints) {
-        clientWindow.add(component, constraints);
-    }
-
     ClientSession clientSession = null;
 
     private void init() {
         while (clientSession == null) {
-            clientSession = ClientSession.Factory.createClientSession("223.194.128.202");
-//            clientSession = ClientSession.Factory.createClientSession("172.29.228.68");
+            clientSession = ClientSession.Factory.createClientSession(address);
+            var fileDropListener = new FileDropListener();
+            fileDropAction = new FileDropListenerActionImpl(clientSession);
+
+            fileDropListener.addFileDropAction(fileDropAction);
+            new DropTarget(clientWindow, fileDropListener);
         }
         System.out.println("연결했습니다.");
     }

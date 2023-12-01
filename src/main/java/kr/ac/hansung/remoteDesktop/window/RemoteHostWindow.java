@@ -82,8 +82,8 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
         add(remoteScreen, BorderLayout.CENTER);
 
         sessionManager = new SessionManager();
-        videoServer = new VideoServer(sessionManager, Session.VIDEO_PORT);
-        controlServer = new ControlServer(sessionManager, Session.CONTROL_PORT);
+        videoServer    = new VideoServer(sessionManager, Session.VIDEO_PORT);
+        controlServer  = new ControlServer(sessionManager, Session.CONTROL_PORT);
 
         fileServer = new FileServer(new OnFileReceivedListener(hostWindow, sessionManager));
 
@@ -130,8 +130,8 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
     private void initScreenCapture() {
         // native resize call
         displaySetting = new DisplaySetting();
-        displaySetting.backDisplaySettings();
-//        displaySetting.resize(1920, 1080, 60);
+        displaySetting.backupDisplaySettings();
+        // displaySetting.resize(1920, 1080, 60);
         dxgiCapture = new DXGIScreenCapture(1920, 1080);
     }
 
@@ -160,7 +160,7 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
         if (diff > 1000) {
             System.out.printf("지난 %.3f초동안 %d 프레임 전송\r", diff, ++count);
             lastSecond = System.nanoTime();
-            count = 0;
+            count      = 0;
         }
     }
 
@@ -205,7 +205,7 @@ public class RemoteHostWindow implements IRDPWindow, Runnable {
 
         waitUntilClientConnection(); // 클라이언트가 접속할 때까지 대기
 
-        displaySettings.backDisplaySettings();
+        displaySettings.backupDisplaySettings();
 
         initScreenCapture();
 

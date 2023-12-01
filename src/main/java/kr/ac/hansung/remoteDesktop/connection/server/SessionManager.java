@@ -27,7 +27,7 @@ public class SessionManager {
         var session = sessions.get(sessionID);
         if (session == null && type == ConnectionType.CONTROL) {
             sessions.put(sessionID,
-                    new ServerSession(null, null, socket)
+                    new ServerSession(null, socket)
             );
             return true;
         }
