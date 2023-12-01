@@ -2,14 +2,16 @@ package kr.ac.hansung.remoteDesktop.connection.client;
 
 import kr.ac.hansung.remoteDesktop.connection.Session;
 import kr.ac.hansung.remoteDesktop.connection.server.FileServer;
+import kr.ac.hansung.remoteDesktop.exception.ConnectionFailureException;
+import kr.ac.hansung.remoteDesktop.exception.FileTransferFailedException;
 import kr.ac.hansung.remoteDesktop.network.message.*;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class ClientSession extends Session {
     private String sessionID;
@@ -23,27 +25,46 @@ public class ClientSession extends Session {
         super(videoSocket, controlSocket);
     }
 
-    public boolean requestVideoSocket() {
-        var host        = controlSocket.getInetAddress().getHostAddress();
-        var videoSocket = new Socket();
+    public boolean requestVideoSocket() throws ConnectionFailureException {
+        var host = controlSocket.getInetAddress().getHostAddress();
         try {
-            videoSocket.connect(new InetSocketAddress(InetAddress.getByName(host), Session.VIDEO_PORT));
+            var videoSocket = new Socket(host, Session.VIDEO_PORT);
+            videoSocket.setSoTimeout(10_000);
             var writer = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(videoSocket.getOutputStream())));
             writer.println(sessionID);
             writer.flush();
             this.videoSocket = videoSocket;
         } catch (IOException e) {
             System.err.println(e.getMessage());
+            if (controlSocket.isConnected()) {
+                try {
+                    controlSocket.close();
+                } catch (IOException ignored) {
+                }
+            }
             if (videoSocket.isConnected()) {
                 try {
                     videoSocket.close();
                 } catch (IOException ignored) {
                 }
             }
-            videoSocket = null;
-            return false;
+            videoSocket   = null;
+            controlSocket = null;
+            throw new ConnectionFailureException("video 연결 실패");
         }
         return true;
+    }
+
+    public Socket requestFileSocket() throws ConnectionFailureException {
+        var    address    = controlSocket.getInetAddress().getHostAddress();
+        Socket fileSocket = null;
+        try {
+            fileSocket = new Socket(address, FileServer.FILE_PORT);
+            fileSocket.setSoTimeout(10_000);
+        } catch (IOException e) {
+            throw new ConnectionFailureException("파일 소켓 생성에 실패했습니다. ", e);
+        }
+        return fileSocket;
     }
 
     byte[] tmp = new byte[20 * 1024 * 1024];
@@ -57,14 +78,13 @@ public class ClientSession extends Session {
             if (inputStream == null)
                 inputStream = new ObjectInputStream(videoSocket.getInputStream());
             var imageInfo = (ImageInfo) inputStream.readObject();
-            if (imageInfo.imageType() == ImageType.NO_UPDATE) {
+            if (imageInfo.type() == ImageInfo.Type.NO_UPDATE) {
                 return 0;
             }
             int length = imageInfo.size();
             if (length == 0) return tmp.length;
             inputStream.readNBytes(tmp, 0, length);
             System.arraycopy(tmp, 0, buffer, 0, length);
-//            System.out.printf("client: %d \n", length);
             return length;
         } catch (IOException e) {
             e.printStackTrace();
@@ -87,40 +107,40 @@ public class ClientSession extends Session {
         }
     }
 
-    public Socket requestFileSocket() throws IOException {
-        var address = controlSocket.getInetAddress().getHostAddress();
-        return new Socket(address, FileServer.FILE_PORT);
-    }
+    public void sendFileTransferRequest(List<File> files) throws FileTransferFailedException {
+        try (Socket socket = requestFileSocket();) {
+            var inputStream  = socket.getInputStream();
+            var outputStream = socket.getOutputStream();
 
-    public void sendFileTransferRequest(List<File> files) throws IOException {
-        var socket       = requestFileSocket();
-        var inputStream  = socket.getInputStream();
-        var outputStream = socket.getOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+            ObjectInputStream  objectInputStream  = new ObjectInputStream(inputStream);
 
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-        ObjectInputStream  objectInputStream  = new ObjectInputStream(inputStream);
+            var names = new ArrayList<String>();
 
-        var names = new ArrayList<String>();
-
-        for (var file : files) {
-            names.add(file.getName());
-        }
-        objectOutputStream.writeObject(new FileSendRequest(sessionID, names));
-        objectOutputStream.flush();
-        try {
-            var response = (FileSendResponse) objectInputStream.readObject();
-            if (response.type() == FileSendResponse.Type.OK) {
-                System.out.println("서버에서 파일 전송을 승인했습니다.");
-                sendFiles(objectOutputStream, files);
-            } else if (response.type() == FileSendResponse.Type.DENIED) {
-                System.out.println("서버에서 파일 전송을 거절했습니다..");
+            for (var file : files) {
+                names.add(file.getName());
             }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+
+            objectOutputStream.writeObject(new FileSendRequest(sessionID, names));
+            objectOutputStream.flush();
+
+            try {
+                var response = (FileSendResponse) objectInputStream.readObject();
+                if (response.type() == FileSendResponse.Type.OK) {
+                    System.out.println("서버에서 파일 전송을 승인했습니다.");
+                    sendFiles(objectOutputStream, files);
+                } else if (response.type() == FileSendResponse.Type.DENIED) {
+                    System.out.println("서버에서 파일 전송을 거절했습니다..");
+                }
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            throw new FileTransferFailedException(e);
         }
     }
 
-    private void sendFiles(ObjectOutputStream objectOutputStream, List<File> files) {
+    private void sendFiles(ObjectOutputStream objectOutputStream, List<File> files) throws FileTransferFailedException {
         for (var file : files) {
             try {
                 var fileInputStream = new FileInputStream(file);
@@ -131,27 +151,50 @@ public class ClientSession extends Session {
                 objectOutputStream.writeObject(new FileMessage(file.getName(), fileInputStream.readAllBytes()));
                 objectOutputStream.flush();
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new FileTransferFailedException(e);
             }
         }
     }
 
     public static class Factory {
-        public static ClientSession createClientSession(String address) {
+        public static ClientSession createClientSession(String address, Supplier<String> passwordSupplier) throws ConnectionFailureException {
             ClientSession clientSession = null;
             try {
                 Socket controlSocket = new Socket(address, CONTROL_PORT);
-                var    reader        = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
-                clientSession = new ClientSession(reader.readLine(), controlSocket);
-                while (!clientSession.requestVideoSocket()) {
-                }
+                controlSocket.setSoTimeout(10_000);
 
+                String sessionID = passwordAuthentication(controlSocket, passwordSupplier);
+
+                clientSession = new ClientSession(sessionID, controlSocket);
+                clientSession.requestVideoSocket();
             } catch (IOException e) {
                 System.err.println(e.getMessage());
-                return null;
+                throw new ConnectionFailureException("Connection Failed", e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
             return clientSession;
         }
-    }
 
+        private static String passwordAuthentication(Socket controlSocket, Supplier<String> passwordSupplier) throws IOException, ClassNotFoundException {
+            var    objectInputStream = new ObjectInputStream(controlSocket.getInputStream());
+            var    printWriter       = new PrintWriter(controlSocket.getOutputStream());
+            String sessionID         = null;
+            while (true) {
+                var authMessage = ((AuthMessage) objectInputStream.readObject());
+                var messageType = authMessage.type();
+
+                if (messageType == AuthMessage.Type.CONNECTION_RESET) {
+                    throw new ConnectionFailureException("호스트에서 접속을 거부했습니다.");
+                } else if (messageType == AuthMessage.Type.PASSWORD_NOT_REQUIRED || messageType == AuthMessage.Type.ACCEPTED) {
+                    sessionID = authMessage.message();
+                    break;
+                } else if (messageType == AuthMessage.Type.PASSWORD_WRONG || messageType == AuthMessage.Type.PASSWORD_REQUIRED) {
+                    printWriter.println(passwordSupplier.get());
+                    printWriter.flush();
+                }
+            }
+            return sessionID;
+        }
+    }
 }

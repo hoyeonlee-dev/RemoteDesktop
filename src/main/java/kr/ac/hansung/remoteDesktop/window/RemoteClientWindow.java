@@ -1,7 +1,9 @@
 package kr.ac.hansung.remoteDesktop.window;
 
 import kr.ac.hansung.remoteDesktop.connection.client.ClientSession;
+import kr.ac.hansung.remoteDesktop.exception.ConnectionFailureException;
 import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
+import kr.ac.hansung.remoteDesktop.window.dialog.AskPasswordDialog;
 import kr.ac.hansung.remoteDesktop.window.event.FileDropListener;
 import kr.ac.hansung.remoteDesktop.window.event.FileDropListenerActionImpl;
 import kr.ac.hansung.remoteDesktop.window.event.StopStreamingOnClose;
@@ -13,6 +15,7 @@ import java.awt.dnd.DropTarget;
 import java.awt.event.WindowEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class RemoteClientWindow implements IRDPWindow, Runnable {
     private JFrame clientWindow;
@@ -91,21 +94,41 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
 
     ClientSession clientSession = null;
 
-    private void init() {
-        while (clientSession == null) {
-            clientSession = ClientSession.Factory.createClientSession(address);
-            var fileDropListener = new FileDropListener();
-            fileDropAction = new FileDropListenerActionImpl(clientSession);
+    public String askPasswordToClient() {
+        var askPasswordWindow = new AskPasswordDialog(clientWindow);
+        askPasswordWindow.setPosition(100, 100);
+        askPasswordWindow.setDialogSize(400, 300);
+        AtomicReference<String> password = new AtomicReference<>("");
+        askPasswordWindow.setSubmit(l -> {
+            password.set(askPasswordWindow.getPassword());
+            askPasswordWindow.dispose();
+        });
+        askPasswordWindow.setCancel(r -> {
+            askPasswordWindow.dispose();
+        });
+        askPasswordWindow.start();
+        return password.get();
+    }
 
-            fileDropListener.addFileDropAction(fileDropAction);
-            new DropTarget(clientWindow, fileDropListener);
-        }
+    private void init() throws ConnectionFailureException {
+        clientSession = ClientSession.Factory.createClientSession(address, this::askPasswordToClient);
+
+        var fileDropListener = new FileDropListener();
+        fileDropAction = new FileDropListenerActionImpl(clientSession);
+
+        fileDropListener.addFileDropAction(fileDropAction);
+        new DropTarget(clientWindow, fileDropListener);
         System.out.println("연결했습니다.");
     }
 
     @Override
     public void run() {
-        init();
+        try {
+            init();
+        } catch (ConnectionFailureException e) {
+            // TODO : 경고창 표시
+            return;
+        }
         new Thread(() -> {
             while (true) {
                 var mousePosition = clientSession.receiveMousePosition();

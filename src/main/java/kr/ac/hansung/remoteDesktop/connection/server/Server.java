@@ -23,27 +23,39 @@ public abstract class Server implements Runnable {
 
     @Override
     public void run() {
-
         try {
             serverSocket = new ServerSocket(port);
             while (true) {
                 var accepted = serverSocket.accept();
-                new Thread(() -> {
-                    var sessionID = getSessionID(accepted);
-                    if (sessionID == null) {
-                        try {
-                            accepted.close();
-                        } catch (IOException e) {
-                            System.err.println("Socket closed");
-                        }
-                    }
-                    if (sessionManager.attachSocket(sessionID, accepted, connectionType)) {
-                        System.err.println("Attach에 실패했습니다.");
-                    }
-                }).start();
+                new Thread(new AcceptedSocketHandler(accepted)).start();
             }
         } catch (IOException e) {
             System.err.println(e.getMessage());
+        }
+    }
+
+    class AcceptedSocketHandler implements Runnable {
+
+        private Socket accepted;
+
+        public AcceptedSocketHandler(Socket accepted) {
+            this.accepted = accepted;
+        }
+
+        @Override
+        public void run() {
+            var sessionID = getSessionID(accepted);
+            if (sessionID == null) {
+                try {
+                    accepted.close();
+                } catch (IOException e) {
+                    System.err.println("Socket closed");
+                }
+                return;
+            }
+            if (sessionManager.attachSocket(sessionID, accepted, connectionType)) {
+                System.err.println("Attach에 실패했습니다.");
+            }
         }
     }
 

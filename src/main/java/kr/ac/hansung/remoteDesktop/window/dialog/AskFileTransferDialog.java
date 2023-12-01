@@ -89,7 +89,7 @@ public class AskFileTransferDialog extends JDialog {
     }
 
     private JButton createDenyButton() {
-        var denyButton = new JButton("수락");
+        var denyButton = new JButton("거절");
         denyButton.addActionListener(deny);
         return denyButton;
     }

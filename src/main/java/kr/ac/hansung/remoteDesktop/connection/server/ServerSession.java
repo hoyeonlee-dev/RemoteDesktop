@@ -4,7 +4,6 @@ package kr.ac.hansung.remoteDesktop.connection.server;
 import kr.ac.hansung.remoteDesktop.connection.Session;
 import kr.ac.hansung.remoteDesktop.network.message.FileSendRequest;
 import kr.ac.hansung.remoteDesktop.network.message.ImageInfo;
-import kr.ac.hansung.remoteDesktop.network.message.ImageType;
 import kr.ac.hansung.remoteDesktop.network.message.MousePosition;
 import org.libjpegturbo.turbojpeg.TJ;
 import org.libjpegturbo.turbojpeg.TJCompressor;
@@ -22,14 +21,12 @@ public class ServerSession extends Session {
 
     byte[] compressBuffer;
 
-    public ServerSession(Socket videoSocket,  Socket controlSocket) {
-        super(videoSocket,  controlSocket);
+    public ServerSession(Socket videoSocket, Socket controlSocket) {
+        super(videoSocket, controlSocket);
         compressBuffer = new byte[20 * 1024 * 1024];
     }
 
     BufferedImage         bufferedImage             = null;
-    ImageOutputStream     imageOutputStream         = null;
-    ByteArrayOutputStream byteArrayOutputStream     = null;
     ObjectOutputStream    videoInfoOutputStream     = null;
     ObjectOutputStream    controlObjectOutputStream = null;
 
@@ -38,7 +35,7 @@ public class ServerSession extends Session {
         if (videoSocket.isClosed()) return;
         try {
             if (videoInfoOutputStream == null) videoInfoOutputStream = new ObjectOutputStream(videoSocket.getOutputStream());
-            videoInfoOutputStream.writeObject(new ImageInfo(ImageType.NO_UPDATE, -1));
+            videoInfoOutputStream.writeObject(new ImageInfo(ImageInfo.Type.NO_UPDATE, -1));
             videoInfoOutputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -81,7 +78,7 @@ public class ServerSession extends Session {
 
             if (videoInfoOutputStream == null) videoInfoOutputStream = new ObjectOutputStream(videoSocket.getOutputStream());
 
-            videoInfoOutputStream.writeObject(new ImageInfo(ImageType.UPDATE, compressor.getCompressedSize()));
+            videoInfoOutputStream.writeObject(new ImageInfo(ImageInfo.Type.UPDATE, compressor.getCompressedSize()));
             videoInfoOutputStream.write(compressBuffer, 0, compressor.getCompressedSize());
             videoInfoOutputStream.flush();
         } catch (IOException e) {

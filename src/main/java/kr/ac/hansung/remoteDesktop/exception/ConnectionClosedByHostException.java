@@ -21,8 +21,8 @@ public class ConnectionClosedByHostException extends IOException {
         super(ERROR_MESSAGE_BASE + message);
     }
 
-    public ConnectionClosedByHostException(Type type, String message) {
-        this(message);
+    public ConnectionClosedByHostException(Type type, String message, Throwable cause) {
+        super(ERROR_MESSAGE_BASE + message, cause);
         this.type = type;
     }
 
