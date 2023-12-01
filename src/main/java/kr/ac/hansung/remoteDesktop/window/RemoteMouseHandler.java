@@ -31,6 +31,9 @@ public class RemoteMouseHandler {
 
         // Robot 클래스를 사용하여 마우스를 이동 
         robot.mouseMove(convertedPoint.x, convertedPoint.y);
+        
+        //이벤트 정보 출력
+        System.out.println("로컬에서 처리된 마우스 이동 이벤트: X=" + convertedPoint.x + ", Y=" + convertedPoint.y);
     }
     
     public void handleKeyEvent(KeyEventInfo keyEventInfo) {
@@ -45,6 +48,8 @@ public class RemoteMouseHandler {
         } else {
             robot.keyRelease(keyCode);
         }
+        //이벤트 정보 출력
+        System.out.println("로컬에서 처리된 키 이벤트: KeyCode=" + keyCode + ", KeyPress=" + keyPress);
     }
 
     private Point convertCoordinates(int x, int y) {

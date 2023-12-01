@@ -117,6 +117,9 @@ public class MyWindow extends JFrame {
 
                 try {
                     Socket serverSocket = new Socket(serverAddress, serverPort);
+                    
+                    remoteMouseSender = new RemoteMouseSender(serverSocket);
+                    
                     openRemoteControlFrame(serverSocket);
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(null, "Failed to connect to the server.");
