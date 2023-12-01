@@ -1,6 +1,5 @@
 package kr.ac.hansung.remoteDesktop.util;
 
-import kr.ac.hansung.remoteDesktop.screenCapture.GDIScreenCapture;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -11,7 +10,7 @@ import java.nio.file.Path;
 public class DLLLoader {
     public static void LoadDLL(String libraryName) throws RuntimeException {
         Path temp = null;
-        try (InputStream in = GDIScreenCapture.class.getResourceAsStream("/" + libraryName)
+        try (InputStream in = DLLLoader.class.getResourceAsStream("/" + libraryName)
         ) {
             temp = temp = Files.createTempFile(null, libraryName);
             FileOutputStream out = new FileOutputStream(temp.toFile());

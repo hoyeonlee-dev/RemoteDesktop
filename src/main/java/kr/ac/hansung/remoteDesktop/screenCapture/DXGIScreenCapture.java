@@ -31,9 +31,9 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
         this.height = height;
         frameRate = 60;
         // bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
-        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
-        frameBuffer = new byte[width * height * 4];
-        onWindowSizeUpdated();
+        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+        frameBuffer = new byte[width * height * 3];
+//        onWindowSizeUpdated();
 
     }
 
@@ -71,7 +71,7 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
 
     private native void updateWindowSize();
 
-    private native byte[] getCapturedScreenByteArray();
+    private native boolean getCapturedScreenByteArray();
 
     private native String getLogMessages();
 
@@ -100,8 +100,8 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
     }
 
     @Override
-    public void doCapture() {
-        getCapturedScreenByteArray();
-    }
 
+    public boolean doCapture() {
+        return getCapturedScreenByteArray();
+    }
 }

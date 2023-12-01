@@ -12,6 +12,10 @@ repositories {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    // https://mvnrepository.com/artifact/org.bytedeco/opencv
+//    implementation 'org.bytedeco:opencv:4.5.5-1.5.7'
+    implementation group: 'org.bytedeco', name: 'javacv-platform', version: '1.5.9'
+    implementation 'org.xerial.snappy:snappy-java:1.1.10.5'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -20,4 +24,9 @@ tasks.withType(JavaCompile).configureEach {
 
 test {
     useJUnitPlatform()
+}
+jar{
+    manifest{
+        attributes 'Main-Class':'kr.ac.hansung.remoteDesktop.window.MainWindow'
+    }
 }
