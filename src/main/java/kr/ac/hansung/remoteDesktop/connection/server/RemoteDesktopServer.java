@@ -65,13 +65,11 @@ public class RemoteDesktopServer {
 
         // 마우스 메시지를 처리하는 메서드
         private void processMouseMessage(CustomMouseMessage mouseMessage) {
-            // 마우스 메시지 처리 로직 작성
             System.out.println("Received Mouse Message: x=" + mouseMessage.getX() + ", y=" + mouseMessage.getY() + ", click=" + mouseMessage.isClick());
         }
 
         // 키 메시지를 처리하는 메서드
         private void processKeyMessage(CustomKeyMessage keyMessage) {
-            // 키 메시지 처리 로직 작성
             System.out.println("Received Key Message: keyCode=" + keyMessage.getKeyCode() + ", pressed=" + keyMessage.isPressed());
         }
     }

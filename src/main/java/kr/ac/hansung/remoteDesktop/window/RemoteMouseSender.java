@@ -1,34 +1,39 @@
 package kr.ac.hansung.remoteDesktop.window;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import kr.ac.hansung.remoteDesktop.network.message.KeyEventInfo;
+import kr.ac.hansung.remoteDesktop.network.message.MouseEventInfo;
+
 public class RemoteMouseSender {
-    private final Socket socket;
-    private final ObjectOutputStream outputStream;
+
+    private Socket socket;
+    private ObjectOutputStream outputStream;
 
     public RemoteMouseSender(Socket socket) throws IOException {
         this.socket = socket;
         this.outputStream = new ObjectOutputStream(socket.getOutputStream());
     }
 
-    public void sendMouseMessage(int x, int y, boolean isClick) throws IOException {
-        CustomMouseMessage mouseMessage = new CustomMouseMessage(x, y, isClick);
-        outputStream.writeObject(mouseMessage);
+    public void sendMouseMove(int x, int y) throws IOException {
+        RemoteMessage message = new RemoteMessage(RemoteMessageType.MOUSE_MOVE, new Point(x, y));
+        outputStream.writeObject(message);
     }
 
-    public void sendKeyMessage(int keyCode, boolean isPressed) throws IOException {
-        CustomKeyMessage keyMessage = new CustomKeyMessage(keyCode, isPressed);
-        outputStream.writeObject(keyMessage);
+    public void sendMouseClick(int button, boolean pressed) throws IOException {
+        MouseEventInfo clickInfo = new MouseEventInfo(MouseEventInfo.MOUSE_CLICK, button, pressed);
+        outputStream.writeObject(clickInfo);
+        outputStream.flush();
     }
 
-    public void close() {
-        try {
-            outputStream.close();
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void sendKeyEvent(int keyCode, boolean keyPress) throws IOException {
+        RemoteMessage message = new RemoteMessage(RemoteMessageType.KEY_EVENT, new KeyEventInfo(keyCode, keyPress));
+        outputStream.writeObject(message);
+        outputStream.flush();
     }
 }
+
+

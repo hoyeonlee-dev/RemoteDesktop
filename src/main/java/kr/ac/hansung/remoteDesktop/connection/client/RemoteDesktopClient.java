@@ -11,14 +11,14 @@ import kr.ac.hansung.remoteDesktop.window.CustomMouseMessage;
 
 public class RemoteDesktopClient {
     public static void main(String[] args) {
+        
         try {
-            String serverIP = "127.0.0.1";
+        	String serverIP = "127.0.0.1"; 
             int serverPort = 12345;
 
             Socket serverSocket = new Socket(serverIP, serverPort);
             System.out.println("서버에 연결되었습니다.");
 
-            // ObjectOutputStream을 생성하여 서버로 데이터를 전송
             ObjectOutputStream outputStream = new ObjectOutputStream(serverSocket.getOutputStream());
 
             // 키보드와 마우스 이벤트를 전송하는 메서드 호출
