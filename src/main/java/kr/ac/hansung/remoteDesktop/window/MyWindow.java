@@ -3,6 +3,7 @@ package kr.ac.hansung.remoteDesktop.window;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.InetAddress;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.awt.event.MouseListener;
 import java.awt.event.*;
+
 
 class HintTextField extends JTextField {
     private String hint;

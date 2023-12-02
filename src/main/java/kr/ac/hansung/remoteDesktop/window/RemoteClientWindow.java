@@ -1,20 +1,48 @@
 package kr.ac.hansung.remoteDesktop.window;
 
 import kr.ac.hansung.remoteDesktop.connection.client.ClientSession;
+import kr.ac.hansung.remoteDesktop.exception.ConnectionFailureException;
 import kr.ac.hansung.remoteDesktop.ui.RemoteScreen;
+import kr.ac.hansung.remoteDesktop.window.dialog.AskPasswordDialog;
+import kr.ac.hansung.remoteDesktop.window.event.FileDropListener;
+import kr.ac.hansung.remoteDesktop.window.event.FileDropListenerActionImpl;
 import kr.ac.hansung.remoteDesktop.window.event.StopStreamingOnClose;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.dnd.DropTarget;
 import java.awt.event.WindowEvent;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class RemoteClientWindow implements IRDPWindow, Runnable {
-    private final JFrame clientWindow;
-    private final RemoteScreen remoteScreen;
+    private JFrame clientWindow;
     byte[] buffer = null;
+    private final RemoteScreen remoteScreen;
+
+    private final String address;
+
+    FileDropListener.FileDropAction fileDropAction;
     private boolean shouldStop;
 
-    public RemoteClientWindow(String title) {
+    public RemoteClientWindow(String title, String address) {
+        remoteScreen = createWindow(title);
+        this.address = address;
+        shouldStop   = false;
+
+        buffer = new byte[1920 * 1080 * 4];
+    }
+
+    public void setTitle(String title) {
+        if (clientWindow != null) {
+            clientWindow.setTitle(title);
+        }
+    }
+
+    private RemoteScreen createWindow(String title) {
+        final RemoteScreen remoteScreen;
         clientWindow = new JFrame(title);
         clientWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         clientWindow.setLayout(new BorderLayout());
@@ -25,21 +53,20 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
         clientWindow.addWindowListener(new StopStreamingOnClose(this));
 
         clientWindow.setVisible(true);
+
         clientWindow.addWindowStateListener(e -> {
             if (e.getNewState() == WindowEvent.WINDOW_CLOSING)
                 shouldStop = true;
         });
-        shouldStop = false;
-
-        buffer = new byte[1920 * 1080 * 4];
-    }
-
-    public static void main(String[] args) {
-        new Thread(new RemoteClientWindow("클라이언트")).start();
+        return remoteScreen;
     }
 
     public void showClient() {
         clientWindow.setVisible(true);
+    }
+
+    public void hideClient() {
+        clientWindow.setVisible(false);
     }
 
     @Override
@@ -52,41 +79,74 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
 
     }
 
-    public void hideClient() {
-        clientWindow.setVisible(false);
+    public void add(Component component, Object constraints) {
+        clientWindow.add(component, constraints);
     }
 
     public byte[] getBuffer() {
         return buffer;
     }
 
-    public void update() {
-        remoteScreen.setImage(buffer);
+    public void updateRemoteScreen() throws IOException {
+        remoteScreen.setImage(ImageIO.read(new ByteArrayInputStream(getBuffer())));
         remoteScreen.repaint();
     }
 
-    public void add(Component component, Object constraints) {
-        clientWindow.add(component, constraints);
+    ClientSession clientSession = null;
+
+    public String askPasswordToClient() {
+        var askPasswordWindow = new AskPasswordDialog(clientWindow);
+        askPasswordWindow.setPosition(100, 100);
+        askPasswordWindow.setDialogSize(400, 300);
+        AtomicReference<String> password = new AtomicReference<>("");
+        askPasswordWindow.setSubmit(l -> {
+            password.set(askPasswordWindow.getPassword());
+            askPasswordWindow.dispose();
+        });
+        askPasswordWindow.setCancel(r -> {
+            askPasswordWindow.dispose();
+        });
+        askPasswordWindow.start();
+        return password.get();
+    }
+
+    private void init() throws ConnectionFailureException {
+        clientSession = ClientSession.Factory.createClientSession(address, this::askPasswordToClient);
+
+        var fileDropListener = new FileDropListener();
+        fileDropAction = new FileDropListenerActionImpl(clientSession);
+
+        fileDropListener.addFileDropAction(fileDropAction);
+        new DropTarget(clientWindow, fileDropListener);
+        System.out.println("연결했습니다.");
     }
 
     @Override
     public void run() {
-        ClientSession clientSession = null;
-        while (clientSession == null) {
-            clientSession = ClientSession.Factory.createClientSession("localhost");
+        try {
+            init();
+        } catch (ConnectionFailureException e) {
+            // TODO : 경고창 표시
+            return;
         }
-        System.out.println("연결했습니다.");
-        while (!clientSession.requestVideoSocket()) {
-            //영상용 소켓을 요청합니다.
-        }
-        while (!clientSession.requestAudioSocket()) {
-            // 오디오용 소켓을 요청합니다.
-        }
+        new Thread(() -> {
+            while (true) {
+                var mousePosition = clientSession.receiveMousePosition();
+                remoteScreen.setMouseX(mousePosition.x());
+                remoteScreen.setMouseY(mousePosition.y());
+            }
+        }).start();
 
         showClient();
+
         while (!shouldStop) {
-            clientSession.receiveVideo(getBuffer());
-            update();
+            int len = clientSession.receiveVideo(getBuffer());
+            if (len == -1) continue;
+            try {
+                updateRemoteScreen();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

@@ -1,24 +1,27 @@
 package kr.ac.hansung.remoteDesktop.ui;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class RemoteScreen extends JPanel {
     static final int DEBUG_STRING_YPOS = 600;
     static final int DEBUG_STRING_XPOS = 100;
     static final int DEFAULT_FONT_SIZE = 20;
     long lastDrawnTime = 0;
-    int width;
-    int height;
-    Font font = new Font("Arial", Font.BOLD, DEFAULT_FONT_SIZE);
+    int  width;
+    int  height;
+    Font font          = new Font("Arial", Font.BOLD, DEFAULT_FONT_SIZE);
     private Image image;
 
     public RemoteScreen(int width, int height) {
         super();
         setDoubleBuffered(true);
-        this.width = width;
+        this.width  = width;
         this.height = height;
         setPreferredSize(new Dimension(width, height));
     }
@@ -46,21 +49,87 @@ public class RemoteScreen extends JPanel {
         this.height = height;
     }
 
-    public synchronized void setImage(Image image) {
+    public void setImage(Image image) {
         this.image = image;
     }
 
-    public synchronized void setImage(byte[] bytes) {
-        if (this.image == null) {
-            image = new BufferedImage(1920, 1080, BufferedImage.TYPE_4BYTE_ABGR);
+
+    BufferedImage cursor;
+
+    public void initCursor() {
+        try {
+            InputStream is = RemoteScreen.class.getClassLoader().getResourceAsStream("cursor_1.png");
+            if (is == null) {
+                throw new IllegalArgumentException("파일을 찾을 수 없습니다.");
+            }
+
+            cursor = ImageIO.read(is);
+
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        var raster = ((BufferedImage) image).getRaster();
+    }
+
+    int mouseX = 0;
+    int mouseY = 0;
+
+    public int getMouseX() {
+        return mouseX;
+    }
+
+    public void setMouseX(int mouseX) {
+        this.mouseX = mouseX;
+    }
+
+    public int getMouseY() {
+        return mouseY;
+    }
+
+    public void setMouseY(int mouseY) {
+        this.mouseY = mouseY;
+    }
+
+    private void drawMousePointer(Graphics g, int x, int y) {
+        if (cursor == null) {
+            initCursor();
+        }
+        g.drawImage(cursor, x, y, null);
+    }
+
+    public void setImage(byte[] bytes) {
+        if (this.image == null) {
+            image = new BufferedImage(1920, 1080, BufferedImage.TYPE_3BYTE_BGR);
+        }
+        var raster     = ((BufferedImage) image).getRaster();
         var dataBuffer = (DataBufferByte) raster.getDataBuffer();
         System.arraycopy(bytes, 0, dataBuffer.getData(), 0, bytes.length);
     }
 
+    public void setImage(byte[] bytes, int offset, int len) {
+        if (this.image == null) {
+            image = new BufferedImage(1920, 1080, BufferedImage.TYPE_3BYTE_BGR);
+        }
+        var raster     = ((BufferedImage) image).getRaster();
+        var dataBuffer = (DataBufferByte) raster.getDataBuffer();
+        System.arraycopy(bytes, offset, dataBuffer.getData(), 0, len);
+    }
+
     @Override
-    public synchronized void paint(Graphics g) {
+    public void update(Graphics g) {
+        super.update(g);
+        if (image == null) {
+            return;
+        }
+        g.drawImage(image, 0, 0, null);
+        long   currentTime = System.nanoTime();
+        double timeElapsed = (double) (currentTime - lastDrawnTime) / 1_000_000;
+        drawMousePointer(g, mouseX, mouseY);
+        g.drawString(String.format("%f ms", timeElapsed), 300, 400);
+    }
+
+    @Override
+    public void paint(Graphics g) {
         //super.paint(g);
         g.setFont(font);
         if (image == null) {
@@ -70,24 +139,13 @@ public class RemoteScreen extends JPanel {
         g.drawImage(image, 0, 0, null);
         long drawEnd = System.nanoTime();
 
-        long currentTime = System.nanoTime();
+        long   currentTime = System.nanoTime();
         double timeElapsed = (double) (currentTime - lastDrawnTime) / 1_000_000;
         g.drawString(String.format("Elapsed  :  %f ms\n", timeElapsed), DEBUG_STRING_XPOS, DEBUG_STRING_XPOS);
         g.drawString(String.format("Draw Bitmap:%f ms\n", (double) (drawEnd - drawBegin) / 1_000_000), DEBUG_STRING_XPOS, DEBUG_STRING_XPOS + DEFAULT_FONT_SIZE);
         g.drawString(String.format("Expected :  %d FPS\n", (int) (1000 / timeElapsed)), DEBUG_STRING_XPOS, DEBUG_STRING_XPOS + DEFAULT_FONT_SIZE * 2);
         lastDrawnTime = currentTime;
+        drawMousePointer(g, mouseX, mouseY);
         g.drawString(Long.toString(System.nanoTime()), 10, 10);
-    }
-
-    @Override
-    public synchronized void update(Graphics g) {
-        super.update(g);
-        if (image == null) {
-            return;
-        }
-        g.drawImage(image, 0, 0, null);
-        long currentTime = System.nanoTime();
-        double timeElapsed = (double) (currentTime - lastDrawnTime) / 1_000_000;
-        g.drawString(String.format("%f ms", timeElapsed), 300, 400);
     }
 }
