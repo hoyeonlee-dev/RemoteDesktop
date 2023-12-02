@@ -3,10 +3,24 @@ package kr.ac.hansung.remoteDesktop.window;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.awt.event.MouseListener;
+import java.awt.event.*;
+
 
 class HintTextField extends JTextField {
     private String hint;
@@ -64,7 +78,16 @@ public class MyWindow extends JFrame {
     private boolean settingsVisible = false;
     private boolean clientVisible = true;
     private boolean hostVisible = false;
-
+    
+    private Socket serverSocket;
+    
+    private List<String> connectedComputers = new ArrayList<>();
+    
+    private JButton connectButton;
+    private HintTextField t_search;
+    
+    private RemoteMouseSender remoteMouseSender;
+    
     public MyWindow(int port) {
         super("window");
         buildGUI();
@@ -72,6 +95,96 @@ public class MyWindow extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
+
+        connectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String input = t_search.getText();
+                String[] parts = input.split(":");
+                
+                if (parts.length != 2) {
+                    JOptionPane.showMessageDialog(null, "Invalid input format. Please use 'ip:port'.");
+                    return;
+                }
+
+                String serverAddress = parts[0].trim();
+                int serverPort;
+
+                try {
+                    serverPort = Integer.parseInt(parts[1].trim());
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(null, "Invalid port number.");
+                    return;
+                }
+
+                try {
+                    Socket serverSocket = new Socket(serverAddress, serverPort);
+                    
+                    remoteMouseSender = new RemoteMouseSender(serverSocket);
+                    
+                    openRemoteControlFrame(serverSocket);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(null, "Failed to connect to the server.");
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        // MyWindow 프레임에 마우스 이벤트 핸들러 등록
+        addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                // 마우스 좌표를 서버로 전송
+            	try {
+                    if (remoteMouseSender != null) {
+                        remoteMouseSender.sendMouseMove(e.getX(), e.getY());
+                    } else {
+                        System.out.println("remoteMouseSender is null");
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        
+        KeyListener keyListener = new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                try {
+                    remoteMouseSender.sendKeyEvent(e.getKeyCode(), true);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                try {
+                    remoteMouseSender.sendKeyEvent(e.getKeyCode(), false);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+
+        MouseListener mouseClickListener = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int button = e.getButton();
+                boolean pressed = true; 
+                try {
+                    remoteMouseSender.sendMouseClick(button, pressed);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+
+        addMouseListener(mouseClickListener);
+        addKeyListener(keyListener);
+
+        setFocusable(true);
+        requestFocusInWindow();
     }
 
     private void buildGUI() {
@@ -139,10 +252,10 @@ public class MyWindow extends JFrame {
         s.setBackground(Color.DARK_GRAY);
         s.setLayout(new FlowLayout());
 
-        HintTextField t_search = new HintTextField("Search Hosts and Computers");
-        t_search.setColumns(40);
-        t_search.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        s.add(t_search);
+        this.t_search = new HintTextField("Search Hosts and Computers"); 
+        this.t_search.setColumns(40);
+        this.t_search.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        s.add(this.t_search);
 
         s.add(Box.createRigidArea(new Dimension(0, 10)));
 
@@ -156,6 +269,15 @@ public class MyWindow extends JFrame {
         plusButton.setPreferredSize(buttonSize);
         plusButton.setBackground(Color.DARK_GRAY);
         plusButton.setForeground(Color.WHITE);
+
+        plusButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String computerName = "컴퓨터1";  // 이 부분은 수정할 것임
+                connectedComputers.add(computerName);
+                updateConnectedComputersPanel();
+            }
+        });
 
         JButton reloadButton = new JButton("Reload");
         Font reloadButtonFont = new Font("SansSerif", Font.PLAIN, 15);
@@ -174,27 +296,110 @@ public class MyWindow extends JFrame {
         return p;
     }
 
-    private JPanel createComputers2Panel() {
-        JPanel p = new JPanel() {
-            @Override
-            public Dimension getPreferredSize() {
-                return new Dimension(200, 550);
-            }
-        };
-        p.setBackground(Color.DARK_GRAY);
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+	
+	private void updateConnectedComputersPanel() {
+	    card2Panel.remove(computers2Panel);
+	    card2Panel.add(createComputers2Panel(), "computers2");
+	    CardLayout card2Layout = (CardLayout) card2Panel.getLayout();
+	    card2Layout.show(card2Panel, "computers2");
+	    card2Panel.revalidate();
+	    card2Panel.repaint();
+	}
+	
+	private JPanel createConnectPanel(String computerName) {
+	    JPanel p = new JPanel() {
+	        @Override
+	        public Dimension getPreferredSize() {
+	            return new Dimension(200, 550);
+	        }
+	    };
+	    p.setBackground(Color.DARK_GRAY);
+	    p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 
-        JPanel cp = new JPanel();
-        cp.setBackground(Color.DARK_GRAY);
-        JLabel n = new JLabel("You have no computers available right now.");
-        n.setFont(new Font("SansSerif", Font.PLAIN, 20));
-        n.setForeground(Color.WHITE);
-        n.setHorizontalAlignment(JLabel.CENTER);
-        cp.add(n);
-        p.add(cp);
+	    JButton connectButton = new JButton("연결하기");
+	    Font connectButtonFont = new Font("SansSerif", Font.PLAIN, 15);
+	    connectButton.setFont(connectButtonFont);
+	    Dimension connectButtonSize = new Dimension(90, 30);
+	    connectButton.setPreferredSize(connectButtonSize);
+	    connectButton.setBackground(Color.DARK_GRAY);
+	    connectButton.setForeground(Color.WHITE);
 
-        return p;
-    }
+	    connectButton.addActionListener(new ActionListener() {
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+	        	String serverHostName = t_search.getText();
+
+	            try {
+	                InetAddress serverAddress = InetAddress.getByName(serverHostName);
+
+	                // 서버 소켓 생성
+	                serverSocket = new Socket(serverAddress, 12345);
+	                
+	                // 연결된 컴퓨터의 원격 제어 창 열기
+	                openRemoteControlFrame(serverSocket);
+	            } catch (IOException ex) {
+	                ex.printStackTrace();
+	            }
+	        }
+	    });
+
+	    p.add(connectButton);
+
+	    return p;
+	}
+
+	private void openRemoteControlFrame(Socket serverSocket) {
+	    try {
+	        // 서버에 소켓을 통해 접속
+	        remoteMouseSender = new RemoteMouseSender(serverSocket);
+
+	        // RemoteControlFrame을 생성하면서 remoteMouseSender 전달
+	        RemoteControlFrame controlFrame = new RemoteControlFrame(remoteMouseSender);
+
+	        // JFrame에 RemoteControlFrame을 추가
+	        JFrame remoteControlFrame = new JFrame("원격 제어");
+	        remoteControlFrame.add(controlFrame);
+
+	        // 예시: 빈 창을 생성
+	        remoteControlFrame.setSize(1920, 1080);
+	        remoteControlFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	        remoteControlFrame.setLocationRelativeTo(null);
+	        remoteControlFrame.setVisible(true);
+	    } catch (IOException e) {
+	        JOptionPane.showMessageDialog(null, "Error while opening remote control frame.");
+	        e.printStackTrace();
+	    }
+	}
+
+
+
+	private JPanel createComputers2Panel() {
+	    JPanel p = new JPanel() {
+	        @Override
+	        public Dimension getPreferredSize() {
+	            return new Dimension(200, 550);
+	        }
+	    };
+	    p.setBackground(Color.DARK_GRAY);
+	    p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+
+	    if (connectedComputers.isEmpty()) {
+	        JPanel cp = new JPanel();
+	        cp.setBackground(Color.DARK_GRAY);
+	        JLabel n = new JLabel("You have no computers available right now.");
+	        n.setFont(new Font("SansSerif", Font.PLAIN, 20));
+	        n.setForeground(Color.WHITE);
+	        n.setHorizontalAlignment(JLabel.CENTER);
+	        cp.add(n);
+	        p.add(cp);
+	    } else {
+	        for (String computerName : connectedComputers) {
+	            p.add(createConnectPanel(computerName));
+	        }
+	    }
+
+	    return p;
+	}
 
     private JPanel createSettingsPanel() {
         JPanel p = new JPanel();
@@ -393,6 +598,8 @@ public class MyWindow extends JFrame {
         Image resizedImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new ImageIcon(resizedImage);
     }
+    
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
