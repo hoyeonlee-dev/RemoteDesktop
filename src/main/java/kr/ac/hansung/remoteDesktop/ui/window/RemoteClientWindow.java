@@ -19,12 +19,12 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RemoteClientWindow implements IRDPWindow, Runnable {
-    private JFrame clientWindow;
-    private final String  address;
-    byte[]          buffer = null;
+    private final String address;
+    byte[] buffer = null;
+    private       JFrame clientWindow;
     private final RemoteScreen remoteScreen;
     FileDropHandler fileDropHandler;
-    private       boolean shouldStop;
+    private boolean shouldStop;
 
     public RemoteClientWindow(String title, String address) {
         remoteScreen = createWindow(title);
@@ -39,6 +39,7 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
             clientWindow.setTitle(title);
         }
     }
+    private ClientSession clientSession;
 
     private RemoteScreen createWindow(String title) {
         final RemoteScreen remoteScreen;
@@ -50,6 +51,7 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
         remoteScreen = new RemoteScreen(1920, 1080);
         clientWindow.add(remoteScreen, BorderLayout.CENTER);
         var clientWindowListener = new ClientWindowListener();
+        clientWindowListener.setWindowClosedRunnable(java.util.List.of(clientWindow::dispose, this::closeSession));
         clientWindow.addWindowListener(clientWindowListener);
 
         clientWindow.setVisible(true);
@@ -107,6 +109,16 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
         return password.get();
     }
 
+    public void closeSession() {
+        if (clientSession != null) {
+            try {
+                clientSession.close();
+            } catch (IOException e) {
+            }
+        }
+
+    }
+
     private ClientSession createClientSession() throws ConnectionFailureException {
         var clientSession = ClientSession.Factory.createClientSession(address, this::askPassword);
         var receiver      = clientSession.getMessageReceiver();
@@ -118,6 +130,7 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
             public void keyPressed(KeyEvent e) {
                 try {
                     super.keyPressed(e);
+                    if (e.getKeyCode() == 0) return;
                     keySender.sendKeyPress(e.getKeyCode());
                 } catch (IOException ex) {
                 }
@@ -127,6 +140,7 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
             public void keyReleased(KeyEvent e) {
                 try {
                     super.keyReleased(e);
+                    if (e.getKeyCode() == 0) return;
                     keySender.sendKeyRelease(e.getKeyCode());
                 } catch (IOException ex) {
                 }
@@ -183,18 +197,16 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
 
     @Override
     public void run() {
-        try (ClientSession clientSession = createClientSession()) {
-
+        try {
+            clientSession = createClientSession();
             var receiver = clientSession.getMessageReceiver();
 
             // 서버로부터의 메시지를 처리하는 스레드
             new Thread(() -> {
-                while (true) {
+                while (!clientSession.isClosed()) {
                     try {
                         receiver.handleServerMessage();
                     } catch (IOException | ClassNotFoundException e) {
-                        clientWindow.dispose();
-                        break;
                     }
                 }
             }).start();

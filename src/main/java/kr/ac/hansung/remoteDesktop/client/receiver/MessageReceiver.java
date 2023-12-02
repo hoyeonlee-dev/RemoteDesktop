@@ -49,7 +49,7 @@ public class MessageReceiver implements Closeable {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             if (e instanceof SocketException) throw e;
         }
     }

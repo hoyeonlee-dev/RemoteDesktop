@@ -6,6 +6,7 @@ import kr.ac.hansung.remoteDesktop.client.sender.RemoteKeySender;
 import kr.ac.hansung.remoteDesktop.client.sender.RemoteMouseSender;
 import kr.ac.hansung.remoteDesktop.exception.ConnectionFailureException;
 import kr.ac.hansung.remoteDesktop.message.RemoteMessage;
+import kr.ac.hansung.remoteDesktop.message.content.ConnectionClosed;
 import kr.ac.hansung.remoteDesktop.message.content.PasswordMessage;
 import kr.ac.hansung.remoteDesktop.server.connection.socketListener.FileSocketListener;
 import kr.ac.hansung.remoteDesktop.server.session.Session;
@@ -16,17 +17,17 @@ import java.net.Socket;
 import java.util.function.Function;
 
 public class ClientSession implements Closeable {
-    public static final int EOF = -100;
-    private final Socket             controlSocket;
-    private       String             sessionID;
-    private       String             address;
-    private       VideoReceiver      videoReceiver;
-    private       MessageReceiver    messageReceiver;
-    private       RemoteKeySender    remoteKeySender;
-    private       RemoteMouseSender  remoteMouseSender;
-    private       Socket             videoSocket;
-    private       ObjectInputStream  controlIn;
-    private       ObjectOutputStream controlOut;
+    public static final int                EOF = -100;
+    private final       Socket             controlSocket;
+    private             String             sessionID;
+    private             String             address;
+    private             VideoReceiver      videoReceiver;
+    private             MessageReceiver    messageReceiver;
+    private             RemoteKeySender    remoteKeySender;
+    private             RemoteMouseSender  remoteMouseSender;
+    private             Socket             videoSocket;
+    private             ObjectInputStream  controlIn;
+    private             ObjectOutputStream controlOut;
 
     private boolean isClosed;
 
@@ -77,6 +78,9 @@ public class ClientSession implements Closeable {
     @Override
     public void close() throws IOException {
         isClosed = true;
+        controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.CONNECTION_CLOSED, new ConnectionClosed("")));
+        controlOut.flush();
+
         videoReceiver.close();
         messageReceiver.close();
         remoteKeySender.close();

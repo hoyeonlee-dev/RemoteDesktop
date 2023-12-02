@@ -37,6 +37,10 @@ public class ServerSession extends Session implements Closeable {
         isClosed       = false;
     }
 
+    public String getSessionID() {
+        return sessionID;
+    }
+
     public boolean isClosed() {
         return isClosed;
     }
@@ -77,6 +81,10 @@ public class ServerSession extends Session implements Closeable {
 
     @Override
     public void close() {
+        try {
+            messageSender.sendCloseMessage("");
+        } catch (IOException e) {
+        }
         isClosed = true;
         try {
             videoOut.close();

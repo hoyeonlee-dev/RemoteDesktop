@@ -26,6 +26,14 @@ public class RemoteInputReceiver implements Closeable {
         isClosed               = false;
     }
 
+    public Runnable getOnCloseMessageReceived() {
+        return onCloseMessageReceived;
+    }
+
+    public void setOnCloseMessageReceived(Runnable onCloseMessageReceived) {
+        this.onCloseMessageReceived = onCloseMessageReceived;
+    }
+
     public void processInputMessage() {
         if (isClosed) return;
         try {
@@ -80,11 +88,11 @@ public class RemoteInputReceiver implements Closeable {
         int     keyCode   = keyMessage.getKeyCode();
         boolean isPressed = keyMessage.isPressed();
 
-        if (isPressed) {
+//        if (isPressed) {
             robot.keyPress(keyCode);
-        } else {
+//        } else {
             robot.keyRelease(keyCode);
-        }
+//        }
     }
 
     @Override

@@ -7,6 +7,7 @@ import kr.ac.hansung.remoteDesktop.server.connection.socketListener.VideoSocketL
 import kr.ac.hansung.remoteDesktop.server.session.ServerSession;
 import kr.ac.hansung.remoteDesktop.server.session.Session;
 import kr.ac.hansung.remoteDesktop.server.session.SessionManager;
+import kr.ac.hansung.remoteDesktop.ui.window.event.ClientMessageHandler;
 import kr.ac.hansung.remoteDesktop.ui.window.event.HostWindowListener;
 import kr.ac.hansung.remoteDesktop.ui.window.event.OnFileReceivedListener;
 import kr.ac.hansung.remoteDesktop.util.screenCapture.DXGIScreenCapture;
@@ -23,73 +24,80 @@ public class RemoteHostWindow implements IRDPWindow {
     public static final  int               EXPECTED_REFRESH_RATE = 20;
     private static final DXGIScreenCapture dxgiCapture           = new DXGIScreenCapture(1920, 1080);
     private static final DisplaySetting    displaySettings       = new DisplaySetting();
-    private final        JFrame            hostWindow;
-    Thread         thread     = null;
+
+    private final JFrame hostWindow;
+    Thread thread = null;
+
     DisplaySetting displaySetting;
-    long           lastSecond = 0;
-    int            count      = 0;
+
+    long lastSecond = 0;
+    int  count      = 0;
+    // 스트리밍을 담당하는 스레드의 동작을 정의한 메서드
+    Runnable mainLoop = new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+                waitUntilClientConnection(); // 클라이언트가 접속할 때까지 대기
+
+                displaySettings.backupDisplaySettings();
+
+                initScreenCapture();
+                showClient(); //클라이언트가 접속하면 화면을 보여줌
+
+                for (var s : sessionManager.getSessions()) {
+                    var session = s.getValue();
+                    if (session != null) {
+                        new Thread(new ClientMessageHandler(sessionManager, session)).start();
+                    }
+                }
+                var sessions = sessionManager.getSessions();
+
+
+                long lastSent = System.nanoTime();
+
+
+                //원격 세션
+                while (sessionManager.getSessions().size() > 0) {
+                    if (!canCaptureNextFrame(System.nanoTime(), lastSent)) continue;
+
+                    if (!dxgiCapture.doCapture()) {
+                        broadcastNoUpdate(sessions);
+                        continue;
+                    }
+
+                    var capturedImage = dxgiCapture.getFrameBuffer();
+
+                    if (savedBuffer == null) savedBuffer = new byte[capturedImage.length];
+
+                    if (wasImageUpdated(capturedImage, savedBuffer)) {
+                        updateImage(capturedImage);
+                        broadcastVideo(sessions);
+                        printStatics();
+                    } else {
+                        broadcastNoUpdate(sessions);
+                    }
+
+                    lastSent = System.nanoTime();
+                }
+            }
+        }
+    };
+    private int width  = 600;
+
     private byte[]             savedBuffer = null;
     private SessionManager     sessionManager;
     private SocketListener     videoSocketListener;
     private SocketListener     controlSocketListener;
-    private int                width       = 600;
-    private int                height      = 500;
     private boolean            shouldStop;
     private FileSocketListener fileSocketListener;
-    Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-            startListeningServer();
+    private int height = 500;
 
-            waitUntilClientConnection(); // 클라이언트가 접속할 때까지 대기
-
-            displaySettings.backupDisplaySettings();
-
-            initScreenCapture();
-            showClient(); //클라이언트가 접속하면 화면을 보여줌
-
-            for (var s : sessionManager.getSessions()) {
-                new Thread(() -> {
-                    var session  = s.getValue();
-                    var receiver = session.getRemoteInputReceiver();
-                    while (!session.isClosed()) {
-                        receiver.processInputMessage();
-                        Point mousePosition = MouseInfo.getPointerInfo().getLocation();
-                        session.getMessageSender().sendMousePosition(mousePosition.x, mousePosition.y);
-                    }
-                }).start();
-            }
-            var sessions = sessionManager.getSessions();
-
-
-            long lastSent = System.nanoTime();
-
-
-            //원격 세션
-            while (thread == Thread.currentThread()) {
-                if (!canCaptureNextFrame(System.nanoTime(), lastSent)) continue;
-
-                if (!dxgiCapture.doCapture()) continue;
-
-                var capturedImage = dxgiCapture.getFrameBuffer();
-
-                if (savedBuffer == null) savedBuffer = new byte[capturedImage.length];
-
-
-                if (wasImageUpdated(capturedImage, savedBuffer)) {
-                    updateImage(capturedImage);
-                    sendVideo(sessions);
-                    printStatics();
-                } else {
-                    sendNoUpdate(sessions);
-                }
-
-                lastSent = System.nanoTime();
-            }
-
-        }
-    };
-
+    /**
+     * 생성자
+     *
+     * @param title 프레임 창의 제목
+     * @throws HeadlessException
+     */
     public RemoteHostWindow(String title) throws HeadlessException {
         hostWindow = new JFrame(title);
         hostWindow.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
@@ -98,20 +106,18 @@ public class RemoteHostWindow implements IRDPWindow {
         hostWindow.setLocationRelativeTo(null);
 
         var hostWindowListener = new HostWindowListener();
-        hostWindowListener.setWindowCloseRunnable(java.util.List.of(this::stop, this::closeSessions, this::deInitScreenCapture, this::stopListeningSockets));
+        hostWindowListener.setWindowCloseRunnable(java.util.List.of(this::stop, this::closeSessions, this::deInitScreenCapture));
         hostWindow.addWindowListener(hostWindowListener);
+
+        startListeningServer();
 
         shouldStop = false;
     }
 
-    public void start() {
-        thread = new Thread(runnable);
-        thread.start();
-    }
 
-    public void stop() {
-        thread = null;
-    }
+    /////////////////////////////////////////////////////////////
+    //// region UI 조작
+    /////////////////////////////////////////////////////////////
 
     public int getWidth() {
         return width;
@@ -154,6 +160,22 @@ public class RemoteHostWindow implements IRDPWindow {
     @Override
     public void add(Component component, Object constraints) {
         hostWindow.add(component, constraints);
+    }
+
+    /////////////////////////////////////////////////////////////
+    //// endregion
+    /////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////////////////////////
+    //// region 리스닝 서버 조작
+    /////////////////////////////////////////////////////////////
+    public void start() {
+        thread = new Thread(mainLoop);
+        thread.start();
+    }
+
+    public void stop() {
+        thread = null;
     }
 
     private void startListeningServer() {
@@ -242,30 +264,63 @@ public class RemoteHostWindow implements IRDPWindow {
         }
     }
 
-    public void sendMousePosition(Set<Map.Entry<String, ServerSession>> sessions, int x, int y) {
+    /////////////////////////////////////////////////////////////
+    //// endregion
+    /////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////////////////////////
+    //// region 영상관련
+    /////////////////////////////////////////////////////////////
+
+    /**
+     * 접속 중인 클라이언트에 영상을 전송
+     *
+     * @param sessions
+     */
+    public void broadcastVideo(Set<Map.Entry<String, ServerSession>> sessions) {
         for (var p : sessions) {
-            p.getValue().getMessageSender().sendMousePosition(x, y);
+            var session = p.getValue();
+            if (session.isClosed()) continue;
+            session.getVideoSender().sendVideo(savedBuffer, 1920, 1080);
         }
     }
 
-    public void sendNoUpdate(Set<Map.Entry<String, ServerSession>> sessions) {
+    /**
+     * 영상의 변경사항이 없는 경우 그 사실을 클라이언트에게 전송
+     *
+     * @param sessions
+     */
+    public void broadcastNoUpdate(Set<Map.Entry<String, ServerSession>> sessions) {
         for (var p : sessions) {
-            p.getValue().getVideoSender().sendNoUpdate();
+            var session = p.getValue();
+            if (session.isClosed()) continue;
+            session.getVideoSender().sendNoUpdate();
         }
     }
 
-    public void sendVideo(Set<Map.Entry<String, ServerSession>> sessions) {
-        for (var p : sessions) {
-            p.getValue().getVideoSender().sendVideo(savedBuffer, 1920, 1080);
-        }
-    }
 
+    /**
+     * 영상이 이전 프레임에서 업데이트 되었는지 확인합니다.
+     *
+     * @param byteArray1 영상을 담은 배열
+     * @param byteArray2 영상을 담은 배열
+     * @return 두 배열의 동일 여부
+     */
     private boolean wasImageUpdated(byte[] byteArray1, byte[] byteArray2) {
         return Arrays.compare(byteArray1, byteArray2) != 0;
     }
 
+    /**
+     * 캡처한 이미지를 전송용 버퍼에 복사합니다.
+     *
+     * @param capturedImage 복사할 이미지
+     */
     private void updateImage(byte[] capturedImage) {
         if (capturedImage.length > savedBuffer.length) savedBuffer = new byte[capturedImage.length];
         System.arraycopy(capturedImage, 0, savedBuffer, 0, capturedImage.length);
     }
+
+    /////////////////////////////////////////////////////////////
+    //// endregion
+    /////////////////////////////////////////////////////////////
 }

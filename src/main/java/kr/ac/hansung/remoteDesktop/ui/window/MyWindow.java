@@ -1,6 +1,7 @@
 package kr.ac.hansung.remoteDesktop.ui.window;
 
 import kr.ac.hansung.remoteDesktop.client.sender.RemoteMouseSender;
+import kr.ac.hansung.remoteDesktop.ui.window.example.RemoteControlFrame;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

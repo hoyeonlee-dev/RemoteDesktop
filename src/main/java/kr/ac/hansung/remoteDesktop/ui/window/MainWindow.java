@@ -28,7 +28,7 @@ public class MainWindow implements IRDPWindow {
         });
         clientButton.addActionListener(e -> {
             System.out.println("원격 클라이언트를 시작합니다");
-            var client = new Thread(new RemoteClientWindow("원격 클라이언트", "192.168.1.232"));
+            var client = new Thread(new RemoteClientWindow("원격 클라이언트", "192.168.1.117"));
             client.start();
         });
 
