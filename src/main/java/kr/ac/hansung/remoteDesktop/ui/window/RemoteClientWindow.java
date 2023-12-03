@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class RemoteClientWindow implements IRDPWindow, Runnable {
     private final String address;
     byte[] buffer = null;
-    private       JFrame clientWindow;
+    private       JFrame       clientWindow;
     private final RemoteScreen remoteScreen;
     FileDropHandler fileDropHandler;
     private boolean shouldStop;
@@ -39,22 +39,26 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
             clientWindow.setTitle(title);
         }
     }
+
     private ClientSession clientSession;
 
     private RemoteScreen createWindow(String title) {
         final RemoteScreen remoteScreen;
         clientWindow = new JFrame(title);
         clientWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        clientWindow.setLayout(new BorderLayout());
+        clientWindow.setLayout(new GridLayout(1, 1));
         clientWindow.setSize(1920, 1080);
         clientWindow.setLocationRelativeTo(null);
+
         remoteScreen = new RemoteScreen(1920, 1080);
-        clientWindow.add(remoteScreen, BorderLayout.CENTER);
+        clientWindow.add(remoteScreen);
+
         var clientWindowListener = new ClientWindowListener();
         clientWindowListener.setWindowClosedRunnable(java.util.List.of(clientWindow::dispose, this::closeSession));
         clientWindow.addWindowListener(clientWindowListener);
 
         clientWindow.setVisible(true);
+        clientWindow.pack();
 
         clientWindow.addWindowStateListener(e -> {
             if (e.getNewState() == WindowEvent.WINDOW_CLOSING) shouldStop = true;

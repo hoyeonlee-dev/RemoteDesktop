@@ -83,16 +83,15 @@ public class RemoteInputReceiver implements Closeable {
         }
     }
 
-
     private void processKeyMessage(KeyboardMessage keyMessage) {
         int     keyCode   = keyMessage.getKeyCode();
         boolean isPressed = keyMessage.isPressed();
 
-//        if (isPressed) {
+        if (isPressed) {
             robot.keyPress(keyCode);
-//        } else {
+        } else {
             robot.keyRelease(keyCode);
-//        }
+        }
     }
 
     @Override

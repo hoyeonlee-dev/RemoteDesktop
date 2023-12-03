@@ -26,6 +26,7 @@ public class RemoteMouseSender implements Closeable {
         if (isClosed) return;
         RemoteMessage message = new RemoteMessage(RemoteMessage.Type.MOUSE_POSITION, new MousePosition(x, y, false));
         objectOutputStream.writeObject(message);
+        objectOutputStream.flush();
     }
 
     public void sendMouseClick(int button, boolean pressed) throws IOException {

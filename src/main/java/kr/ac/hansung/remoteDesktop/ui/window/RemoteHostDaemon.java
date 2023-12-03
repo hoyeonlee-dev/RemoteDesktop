@@ -8,32 +8,32 @@ import kr.ac.hansung.remoteDesktop.server.session.ServerSession;
 import kr.ac.hansung.remoteDesktop.server.session.Session;
 import kr.ac.hansung.remoteDesktop.server.session.SessionManager;
 import kr.ac.hansung.remoteDesktop.ui.window.event.ClientMessageHandler;
-import kr.ac.hansung.remoteDesktop.ui.window.event.HostWindowListener;
 import kr.ac.hansung.remoteDesktop.ui.window.event.OnFileReceivedListener;
 import kr.ac.hansung.remoteDesktop.util.screenCapture.DXGIScreenCapture;
 import kr.ac.hansung.remoteDesktop.util.screenCapture.DisplaySetting;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
-public class RemoteHostWindow implements IRDPWindow {
+public class RemoteHostDaemon {
     public static final  int               EXPECTED_REFRESH_RATE = 20;
     private static final DXGIScreenCapture dxgiCapture           = new DXGIScreenCapture(1920, 1080);
     private static final DisplaySetting    displaySettings       = new DisplaySetting();
 
-    private final JFrame hostWindow;
     Thread thread = null;
 
     DisplaySetting displaySetting;
 
-    long lastSecond = 0;
-    int  count      = 0;
+    long     lastSecond = 0;
+    int      count      = 0;
+    private final int    width       = 600;
+    private       byte[] savedBuffer = null;
+    private final SessionManager sessionManager;
     // 스트리밍을 담당하는 스레드의 동작을 정의한 메서드
-    Runnable mainLoop = new Runnable() {
+    Runnable mainLoop   = new Runnable() {
         @Override
         public void run() {
             while (true) {
@@ -42,7 +42,6 @@ public class RemoteHostWindow implements IRDPWindow {
                 displaySettings.backupDisplaySettings();
 
                 initScreenCapture();
-                showClient(); //클라이언트가 접속하면 화면을 보여줌
 
                 for (var s : sessionManager.getSessions()) {
                     var session = s.getValue();
@@ -82,108 +81,46 @@ public class RemoteHostWindow implements IRDPWindow {
             }
         }
     };
-    private int width  = 600;
-
-    private byte[]             savedBuffer = null;
-    private SessionManager     sessionManager;
     private SocketListener     videoSocketListener;
     private SocketListener     controlSocketListener;
-    private boolean            shouldStop;
-    private FileSocketListener fileSocketListener;
-    private int height = 500;
+    private       FileSocketListener fileSocketListener;
+    private final int                height = 500;
+    private       JFrame             parentWindow;
+    private boolean            isListening;
 
     /**
      * 생성자
-     *
-     * @param title 프레임 창의 제목
-     * @throws HeadlessException
      */
-    public RemoteHostWindow(String title) throws HeadlessException {
-        hostWindow = new JFrame(title);
-        hostWindow.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-        hostWindow.setLayout(new BorderLayout());
-        hostWindow.setSize(getWidth(), getHeight());
-        hostWindow.setLocationRelativeTo(null);
-
-        var hostWindowListener = new HostWindowListener();
-        hostWindowListener.setWindowCloseRunnable(java.util.List.of(this::stop, this::closeSessions, this::deInitScreenCapture));
-        hostWindow.addWindowListener(hostWindowListener);
-
-        startListeningServer();
-
-        shouldStop = false;
+    public RemoteHostDaemon() {
+        sessionManager = new SessionManager();
+        isListening    = false;
+        thread         = new Thread(mainLoop);
+        thread.start();
     }
 
-
-    /////////////////////////////////////////////////////////////
-    //// region UI 조작
-    /////////////////////////////////////////////////////////////
-
-    public int getWidth() {
-        return width;
+    public void setParentWindow(JFrame parentWindow) {
+        this.parentWindow = parentWindow;
     }
-
-    public void setWidth(int width) {
-        this.width = width;
-        hostWindow.setSize(width, getHeight());
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
-        hostWindow.setSize(getWidth(), height);
-    }
-
-    @Override
-    public void showClient() {
-        hostWindow.setVisible(true);
-    }
-
-    @Override
-    public void hideClient() {
-        hostWindow.setVisible(false);
-    }
-
-    @Override
-    public void stopWindowAndService() {
-        shouldStop = true;
-    }
-
-    @Override
-    public void add(Component component) {
-        hostWindow.add(component);
-    }
-
-    @Override
-    public void add(Component component, Object constraints) {
-        hostWindow.add(component, constraints);
-    }
-
-    /////////////////////////////////////////////////////////////
-    //// endregion
-    /////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////
     //// region 리스닝 서버 조작
     /////////////////////////////////////////////////////////////
     public void start() {
-        thread = new Thread(mainLoop);
-        thread.start();
+        if (!isListening) {
+            isListening = true;
+            startListeningServer();
+        }
     }
 
     public void stop() {
-        thread = null;
+        stopSocketListeners();
     }
 
     private void startListeningServer() {
-        sessionManager        = new SessionManager();
         videoSocketListener   = new VideoSocketListener(sessionManager, Session.VIDEO_PORT);
         controlSocketListener = new ControlSocketListener(sessionManager, Session.CONTROL_PORT);
 
-        fileSocketListener = new FileSocketListener(new OnFileReceivedListener(hostWindow, sessionManager));
+        fileSocketListener = new FileSocketListener(new OnFileReceivedListener(parentWindow, sessionManager));
 
         new Thread(videoSocketListener).start();
         new Thread(controlSocketListener).start();
@@ -200,15 +137,17 @@ public class RemoteHostWindow implements IRDPWindow {
     /**
      * 호스트 리스닝 소켓을 종료합니다.
      */
-    private void stopListeningSockets() {
+    private void stopSocketListeners() {
+        isListening = false;
         try {
             controlSocketListener.stopServer();
+            controlSocketListener = null;
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         try {
             videoSocketListener.stopServer();
+            videoSocketListener = null;
         } catch (IOException e) {
             e.printStackTrace();
         }
