@@ -1,4 +1,4 @@
-package kr.ac.hansung.remoteDesktop.ui.window;
+package kr.ac.hansung.remoteDesktop.ui.window.example;
 
 import kr.ac.hansung.remoteDesktop.message.content.KeyboardMessage;
 import kr.ac.hansung.remoteDesktop.message.content.MousePosition;

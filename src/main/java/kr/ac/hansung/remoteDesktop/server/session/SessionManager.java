@@ -20,6 +20,10 @@ public class SessionManager {
         return sessions.entrySet();
     }
 
+    public void removeSession(String key) {
+        sessions.remove(key);
+    }
+
     public void attachSession(String sessionID, ServerSession serverSession) {
         sessions.put(sessionID, serverSession);
     }
