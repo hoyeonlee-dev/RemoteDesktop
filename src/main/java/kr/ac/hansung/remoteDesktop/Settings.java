@@ -4,15 +4,14 @@ import javax.swing.*;
 import java.io.File;
 
 public class Settings {
-	private static Settings instance;
-	private static String receivedFilesPath;
-	private static String savePath;
-	
-    public static String password = "asdf";
-    
+    public static String password = "1234";
+    private static Settings instance;
+    private static String receivedFilesPath;
+    private static String savePath;
+
     private Settings() {
-        receivedFilesPath = "defaultReceivedFilesPath";
-        savePath = "defaultSavePath";
+        receivedFilesPath = System.getProperty("user.dir");
+        savePath = System.getProperty("user.dir");
     }
 
     public static Settings getInstance() {
@@ -27,7 +26,7 @@ public class Settings {
     }
 
     public void setSavePath(String savePath) {
-        this.savePath = savePath;
+        Settings.savePath = savePath;
     }
 
     public String getReceivedFilesPath() {
@@ -37,7 +36,7 @@ public class Settings {
     public void setReceivedFilesPath(String path) {
         receivedFilesPath = path;
     }
-    
+
     public void chooseReceivedFilesPath() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);

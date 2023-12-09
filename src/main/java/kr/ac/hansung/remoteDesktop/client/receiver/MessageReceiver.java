@@ -1,5 +1,6 @@
 package kr.ac.hansung.remoteDesktop.client.receiver;
 
+import kr.ac.hansung.remoteDesktop.exception.ConnectionClosedByHostException;
 import kr.ac.hansung.remoteDesktop.message.RemoteMessage;
 import kr.ac.hansung.remoteDesktop.message.content.MousePosition;
 
@@ -9,16 +10,19 @@ import java.io.ObjectInputStream;
 import java.net.SocketException;
 import java.util.function.Consumer;
 
+/**
+ * 서버로부터 전송된 메시지를 수신하고 처리하는 클래스
+ */
 public class MessageReceiver implements Closeable {
     private final ObjectInputStream controlObjectInputStream;
 
     private Consumer<MousePosition> onMouseMessageReceived;
-    private Runnable                onWindowCloseReceived;
-    private boolean                 isClosed;
+    private Runnable onWindowCloseReceived;
+    private boolean isClosed;
 
     public MessageReceiver(ObjectInputStream controlObjectInputStream) {
         this.controlObjectInputStream = controlObjectInputStream;
-        isClosed                      = false;
+        isClosed = false;
     }
 
     public Consumer<MousePosition> getOnMouseMessageReceived() {
@@ -41,9 +45,12 @@ public class MessageReceiver implements Closeable {
         try {
             var obj = controlObjectInputStream.readObject();
             if (obj instanceof RemoteMessage message) {
-                if (message.getType() == RemoteMessage.Type.CONNECTION_CLOSED && onWindowCloseReceived != null)
-                    onWindowCloseReceived.run();
-                else if (message.getType() == RemoteMessage.Type.MOUSE_POSITION) {
+                if (message.getType() == RemoteMessage.Type.CONNECTION_CLOSED) {
+                    if (onWindowCloseReceived != null) {
+                        onWindowCloseReceived.run();
+                    }
+                    throw new ConnectionClosedByHostException("서버가 연결을 종료했습니다.");
+                } else if (message.getType() == RemoteMessage.Type.MOUSE_POSITION) {
                     if (onMouseMessageReceived != null)
                         onMouseMessageReceived.accept((MousePosition) message.getData());
                 }

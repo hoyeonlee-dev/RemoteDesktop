@@ -1,5 +1,6 @@
 package kr.ac.hansung.remoteDesktop.server.receiver;
 
+import kr.ac.hansung.remoteDesktop.exception.ConnectionClosedByClientException;
 import kr.ac.hansung.remoteDesktop.message.RemoteMessage;
 import kr.ac.hansung.remoteDesktop.message.content.KeyboardMessage;
 import kr.ac.hansung.remoteDesktop.message.content.MouseClick;
@@ -17,13 +18,13 @@ import java.io.ObjectInputStream;
 public class RemoteInputReceiver implements Closeable {
     private final Robot robot;
     ObjectInputStream objectInputStream;
-    Runnable          onCloseMessageReceived;
+    Runnable onCloseMessageReceived;
     private boolean isClosed;
 
     public RemoteInputReceiver(ObjectInputStream objectInputStream, Robot robot) {
         this.objectInputStream = objectInputStream;
-        this.robot             = robot;
-        isClosed               = false;
+        this.robot = robot;
+        isClosed = false;
     }
 
     public Runnable getOnCloseMessageReceived() {
@@ -40,30 +41,31 @@ public class RemoteInputReceiver implements Closeable {
             var message = (RemoteMessage) objectInputStream.readObject();
             switch (message.getType()) {
                 case CONNECTION_CLOSED:
-                    if (onCloseMessageReceived != null)
+                    if (onCloseMessageReceived != null) {
                         onCloseMessageReceived.run();
-                    break;
+                    }
+                    throw new ConnectionClosedByClientException("");
                 case MOUSE_POSITION:
-                    MousePosition mousePosition = (MousePosition) message.getData();
-                    System.out.printf("mouse move : x : %d  y : %d Click %b\n", mousePosition.getX(), mousePosition.getY(), mousePosition.isClick());
-                    processMouseMove(mousePosition);
+                    processMouseMove((MousePosition) message.getData());
                     break;
                 case MOUSE_CLICK:
-                    MouseClick mouseClick = (MouseClick) message.getData();
-                    System.out.printf("mouse click : code : %s  Click %b\n", mouseClick.getKeyCode() == MouseClick.RIGHT_BUTTON ? "Right" : "Left", mouseClick.isPressed());
-                    processMouseClick(mouseClick);
+                    processMouseClick((MouseClick) message.getData());
                     break;
                 case KEYBOARD:
-                    KeyboardMessage keyboardMessage = (KeyboardMessage) message.getData();
-                    System.out.printf("KeyPressed : KeyCode : %d, isPressed : %b\n", keyboardMessage.getKeyCode(), keyboardMessage.isPressed());
-                    processKeyMessage(keyboardMessage);
+                    processKeyMessage((KeyboardMessage) message.getData());
                     break;
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("개발상 문제입니다. 개발자에게 문의하세요");
         }
     }
 
     private void processMouseClick(MouseClick mouseClick) {
+        System.out.printf("mouse click : code : %s  Click %b\n",
+                          mouseClick.getKeyCode() == MouseClick.RIGHT_BUTTON ? "Right" : "Left",
+                          mouseClick.isPressed());
         if (mouseClick.getKeyCode() == MouseClick.LEFT_BUTTON) {
             robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
             robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
@@ -75,6 +77,8 @@ public class RemoteInputReceiver implements Closeable {
     }
 
     private void processMouseMove(MousePosition mouseMessage) {
+        System.out.printf("mouse move : x : %d  y : %d Click %b\n", mouseMessage.getX(),
+                          mouseMessage.getY(), mouseMessage.isClick());
         robot.mouseMove(mouseMessage.getX(), mouseMessage.getY());
 
         if (mouseMessage.isClick()) {
@@ -84,7 +88,9 @@ public class RemoteInputReceiver implements Closeable {
     }
 
     private void processKeyMessage(KeyboardMessage keyMessage) {
-        int     keyCode   = keyMessage.getKeyCode();
+        System.out.printf("KeyPressed : KeyCode : %d, isPressed : %b\n", keyMessage.getKeyCode(),
+                          keyMessage.isPressed());
+        int keyCode = keyMessage.getKeyCode();
         boolean isPressed = keyMessage.isPressed();
 
         if (isPressed) {

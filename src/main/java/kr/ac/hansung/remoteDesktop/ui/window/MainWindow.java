@@ -8,10 +8,7 @@ import kr.ac.hansung.remoteDesktop.ui.window.example.RemoteControlFrame;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,19 +17,19 @@ import java.util.List;
 public class MainWindow extends JFrame {
     private final RemoteHostDaemon remoteHostDaemon;
     private final List<String> connectedComputers = new ArrayList<>();
-    private       JPanel           cardPanel;
-    private       JPanel           card2Panel;
+    private JPanel cardPanel;
+    private JPanel card2Panel;
     private JPanel accountPanel;
     private JPanel computersPanel;
     private JPanel computers2Panel;
     private JPanel settingsPanel;
     private JPanel settings2Panel;
-    private JPanel  clientPanel;
-    private JPanel  hostPanel;
+    private JPanel clientPanel;
+    private JPanel hostPanel;
     private boolean computersVisible = true;
-    private boolean settingsVisible  = false;
-    private boolean clientVisible    = true;
-    private boolean hostVisible      = false;
+    private boolean settingsVisible = false;
+    private boolean clientVisible = true;
+    private boolean hostVisible = false;
     private HintTextField t_search;
 
     private RemoteMouseSender remoteMouseSender;
@@ -60,14 +57,14 @@ public class MainWindow extends JFrame {
     }
 
     private void buildGUI() {
-        cardPanel  = new JPanel(new CardLayout());
+        cardPanel = new JPanel(new CardLayout());
         card2Panel = new JPanel(new CardLayout());
 
-        computersPanel  = createComputersPanel();
+        computersPanel = createComputersPanel();
         computers2Panel = createComputers2Panel();
-        settingsPanel   = createSettingsPanel();
-        settings2Panel  = createClientPanel();
-        accountPanel    = accountPanel();
+        settingsPanel = createSettingsPanel();
+        settings2Panel = createClientPanel();
+        accountPanel = accountPanel();
 
         JPanel mainPanel = new JPanel(new BorderLayout());
 
@@ -135,7 +132,7 @@ public class MainWindow extends JFrame {
         buttonPanel.setBackground(Color.DARK_GRAY);
 
         JButton plusButton = new JButton("+");
-        Font    buttonFont = new Font("SansSerif", Font.PLAIN, 20);
+        Font buttonFont = new Font("SansSerif", Font.PLAIN, 20);
         plusButton.setFont(buttonFont);
         Dimension buttonSize = new Dimension(50, 30);
         plusButton.setPreferredSize(buttonSize);
@@ -145,14 +142,14 @@ public class MainWindow extends JFrame {
         plusButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String computerName = "컴퓨터1"; 
+                String computerName = "컴퓨터1";
                 connectedComputers.add(computerName);
                 updateConnectedComputersPanel();
             }
         });
 
-        JButton reloadButton     = new JButton("Reload");
-        Font    reloadButtonFont = new Font("SansSerif", Font.PLAIN, 15);
+        JButton reloadButton = new JButton("Reload");
+        Font reloadButtonFont = new Font("SansSerif", Font.PLAIN, 15);
         reloadButton.setFont(reloadButtonFont);
         Dimension reloadButtonSize = new Dimension(90, 30);
         reloadButton.setPreferredSize(reloadButtonSize);
@@ -176,7 +173,7 @@ public class MainWindow extends JFrame {
         card2Panel.revalidate();
         card2Panel.repaint();
     }
-    
+
     private JPanel createConnectPanel(String computerName) {
         JPanel p = new JPanel(new GridBagLayout());
         p.setBackground(Color.DARK_GRAY);
@@ -186,12 +183,13 @@ public class MainWindow extends JFrame {
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.CENTER;
 
-        JLabel computerIconLabel = new JLabel(resizeImageIcon(new ImageIcon(getClass().getClassLoader().getResource("computer_icon.png")), 80, 80));
+        JLabel computerIconLabel = new JLabel(
+                resizeImageIcon(new ImageIcon(getClass().getClassLoader().getResource("computer_icon.png")), 80, 80));
         computerIconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         p.add(computerIconLabel, gbc);
 
         gbc.gridy = 1;
-        gbc.insets = new Insets(10, 0, 0, 0); 
+        gbc.insets = new Insets(10, 0, 0, 0);
 
         JButton connectButton = new JButton("연결하기");
         Font connectButtonFont = new Font("SansSerif", Font.PLAIN, 15);
@@ -214,7 +212,7 @@ public class MainWindow extends JFrame {
 
         return p;
     }
-    
+
     private void openRemoteControlFrame(Socket serverSocket) {
         RemoteControlFrame controlFrame = new RemoteControlFrame(remoteMouseSender);
 
@@ -252,9 +250,9 @@ public class MainWindow extends JFrame {
                 p.add(createConnectPanel(computerName));
             }
         }
-        
-     return p;
-    }  
+
+        return p;
+    }
 
     private JPanel createSettingsPanel() {
         JPanel p = new JPanel();
@@ -279,7 +277,7 @@ public class MainWindow extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 clientVisible = true;
-                hostVisible   = false;
+                hostVisible = false;
 
                 if (clientPanel.getParent() == null) {
                     card2Panel.add(clientPanel, "clientPanel");
@@ -307,7 +305,7 @@ public class MainWindow extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 clientVisible = false;
-                hostVisible   = true;
+                hostVisible = true;
 
                 if (hostPanel.getParent() == null) {
                     card2Panel.add(hostPanel, "hostPanel");
@@ -329,7 +327,7 @@ public class MainWindow extends JFrame {
         hb.setPreferredSize(hbSize);
         hb.setBackground(Color.DARK_GRAY);
         hb.setForeground(Color.WHITE);
-        
+
         // 파일 저장 위치 버튼
         JButton fb = new JButton("File");
         fb.addActionListener(new ActionListener() {
@@ -346,7 +344,7 @@ public class MainWindow extends JFrame {
         fb.setForeground(Color.WHITE);
 
         clientPanel = createClientPanel();
-        hostPanel   = createHostPanel();
+        hostPanel = createHostPanel();
 
         buttonPanel.add(cb);
         buttonPanel.add(hb);
@@ -360,7 +358,7 @@ public class MainWindow extends JFrame {
     private JPanel createClientPanel() {
         JPanel p = new JPanel();
         p.setBackground(Color.DARK_GRAY);
-        
+
         JLabel clientLabel = new JLabel("CLIENT SETTINGS");
         clientLabel.setForeground(Color.WHITE);
         clientLabel.setFont(new Font("SansSerif", Font.PLAIN, 25));
@@ -368,13 +366,13 @@ public class MainWindow extends JFrame {
 
         return p;
     }
-    
+
     private void openFilePathWindow() {
-    	FilePathWindow FilePathWindow = new FilePathWindow();  
+        FilePathWindow FilePathWindow = new FilePathWindow();
     }
-    
+
     public void settingsUpdated() {
-        
+
     }
 
     private JPanel createHostPanel() {
@@ -396,6 +394,7 @@ public class MainWindow extends JFrame {
         JTextField passwordTextField = new JTextField(20);
         passwordTextField.setBackground(Color.DARK_GRAY);
         passwordTextField.setForeground(Color.WHITE);
+        passwordTextField.setText(Settings.password);
         hostingEnabled.add(passwordTextField);
 
         hostingEnabled.add(Box.createRigidArea(new Dimension(50, 0)));
@@ -408,17 +407,19 @@ public class MainWindow extends JFrame {
 
         hostingEnabled.add(Box.createRigidArea(new Dimension(0, 0)));
 
-        String[] comboBoxItems = {"ON", "OFF"};
+        String[] comboBoxItems = {"ON",
+                                  "OFF"
+        };
         JComboBox<String> comboBox = new JComboBox<>(comboBoxItems);
         comboBox.setBackground(Color.DARK_GRAY);
         comboBox.setForeground(Color.WHITE);
         hostingEnabled.add(comboBox);
-        
+
         comboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String selectedOption = (String) comboBox.getSelectedItem();
-                
+
                 if ("ON".equals(selectedOption)) {
                     //예: remoteHostDaemon.startHosting();
                 } else {
@@ -428,43 +429,52 @@ public class MainWindow extends JFrame {
         });
 
         // update Settings.password
-        passwordTextField.addActionListener(new ActionListener() {
+        passwordTextField.addKeyListener(new KeyListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                Settings.password = passwordTextField.getText();
-                
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                Settings.password = passwordTextField.getText().trim();
             }
         });
-        
+
         p.add(hostingEnabled);
 
         return p;
     }
-    
+
     private void createControlPanel() {
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.setBackground(Color.BLACK);
 
         ImageIcon computersIcon = new ImageIcon(getClass().getClassLoader().getResource("computers.jpg"));
-        ImageIcon settingsIcon  = new ImageIcon(getClass().getClassLoader().getResource("settings.jpg"));
-        ImageIcon exitIcon      = new ImageIcon(getClass().getClassLoader().getResource("logout.jpg"));
+        ImageIcon settingsIcon = new ImageIcon(getClass().getClassLoader().getResource("settings.jpg"));
+        ImageIcon exitIcon = new ImageIcon(getClass().getClassLoader().getResource("logout.jpg"));
 
         ImageIcon resizedComputersIcon = resizeImageIcon(computersIcon, 64, 64);
-        ImageIcon resizedSettingsIcon  = resizeImageIcon(settingsIcon, 64, 64);
-        ImageIcon resizedExitIcon      = resizeImageIcon(exitIcon, 64, 64);
+        ImageIcon resizedSettingsIcon = resizeImageIcon(settingsIcon, 64, 64);
+        ImageIcon resizedExitIcon = resizeImageIcon(exitIcon, 64, 64);
 
         JLabel computersLabel = new JLabel(resizedComputersIcon);
-        JLabel settingsLabel  = new JLabel(resizedSettingsIcon);
-        JLabel exitLabel      = new JLabel(resizedExitIcon);
+        JLabel settingsLabel = new JLabel(resizedSettingsIcon);
+        JLabel exitLabel = new JLabel(resizedExitIcon);
 
         computersLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 computersVisible = true;
-                settingsVisible  = false;
+                settingsVisible = false;
 
-                CardLayout cardLayout  = (CardLayout) cardPanel.getLayout();
+                CardLayout cardLayout = (CardLayout) cardPanel.getLayout();
                 CardLayout card2Layout = (CardLayout) card2Panel.getLayout();
                 cardLayout.show(cardPanel, computersVisible ? "computers" : "settings");
                 card2Layout.show(card2Panel, computersVisible ? "computers2" : "settings2");
@@ -476,9 +486,9 @@ public class MainWindow extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 computersVisible = false;
-                settingsVisible  = true;
+                settingsVisible = true;
 
-                CardLayout cardLayout  = (CardLayout) cardPanel.getLayout();
+                CardLayout cardLayout = (CardLayout) cardPanel.getLayout();
                 CardLayout card2Layout = (CardLayout) card2Panel.getLayout();
                 cardLayout.show(cardPanel, computersVisible ? "computers" : "settings");
                 card2Layout.show(card2Panel, computersVisible ? "computers2" : "settings2");
@@ -489,7 +499,9 @@ public class MainWindow extends JFrame {
         exitLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int choice = JOptionPane.showOptionDialog(null, "Do you want to exit?", "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+                int choice = JOptionPane.showOptionDialog(null, "Do you want to exit?", "Confirmation",
+                                                          JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+                                                          null, null);
                 if (choice == JOptionPane.YES_OPTION) {
                     System.exit(0);
                 }
@@ -508,7 +520,7 @@ public class MainWindow extends JFrame {
     }
 
     private ImageIcon resizeImageIcon(ImageIcon icon, int width, int height) {
-        Image image        = icon.getImage();
+        Image image = icon.getImage();
         Image resizedImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new ImageIcon(resizedImage);
     }

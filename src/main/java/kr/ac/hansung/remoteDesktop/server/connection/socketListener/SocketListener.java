@@ -12,11 +12,11 @@ public abstract class SocketListener implements Runnable {
     private final int port;
 
     private final SessionManager sessionManager;
-    protected     ConnectionType connectionType;
-    private       ServerSocket   serverSocket;
+    protected ConnectionType connectionType;
+    private ServerSocket serverSocket;
 
     public SocketListener(SessionManager sessionManager, int port) {
-        this.port           = port;
+        this.port = port;
         this.sessionManager = sessionManager;
     }
 
@@ -33,6 +33,10 @@ public abstract class SocketListener implements Runnable {
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
+    }
+
+    public void stopServer() throws IOException {
+        if (!serverSocket.isClosed()) serverSocket.close();
     }
 
     class AcceptedSocketHandler implements Runnable {
@@ -58,10 +62,6 @@ public abstract class SocketListener implements Runnable {
                 System.err.println("Attach에 실패했습니다.");
             }
         }
-    }
-
-    public void stopServer() throws IOException {
-        if (!serverSocket.isClosed()) serverSocket.close();
     }
 
 }

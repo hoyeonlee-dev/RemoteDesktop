@@ -1,9 +1,8 @@
 package kr.ac.hansung.remoteDesktop.ui.window;
 
-import javax.swing.*;
-
 import kr.ac.hansung.remoteDesktop.Settings;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -17,6 +16,15 @@ public class FilePathWindow extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new FilePathWindow();
+            }
+        });
     }
 
     private void buildGUI() {
@@ -44,7 +52,7 @@ public class FilePathWindow extends JFrame {
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose();  
+                dispose();
             }
         });
         panel.add(saveButton);
@@ -55,14 +63,5 @@ public class FilePathWindow extends JFrame {
 
     private void updatePathTextField() {
         pathTextField.setText(Settings.getInstance().getSavePath());
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new FilePathWindow();
-            }
-        });
     }
 }

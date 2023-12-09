@@ -13,15 +13,18 @@ public class RemoteScreen extends JPanel {
     static final int DEBUG_STRING_XPOS = 100;
     static final int DEFAULT_FONT_SIZE = 20;
     long lastDrawnTime = 0;
-    int  width;
-    int  height;
-    Font font          = new Font("Arial", Font.BOLD, DEFAULT_FONT_SIZE);
+    int width;
+    int height;
+    Font font = new Font("Arial", Font.BOLD, DEFAULT_FONT_SIZE);
+    BufferedImage cursor;
+    int mouseX = 0;
+    int mouseY = 0;
     private Image image;
 
     public RemoteScreen(int width, int height) {
         super();
         setDoubleBuffered(true);
-        this.width  = width;
+        this.width = width;
         this.height = height;
         setPreferredSize(new Dimension(width, height));
     }
@@ -53,9 +56,6 @@ public class RemoteScreen extends JPanel {
         this.image = image;
     }
 
-
-    BufferedImage cursor;
-
     public void initCursor() {
         try {
             InputStream is = RemoteScreen.class.getClassLoader().getResourceAsStream("cursor_1.png");
@@ -70,9 +70,6 @@ public class RemoteScreen extends JPanel {
             e.printStackTrace();
         }
     }
-
-    int mouseX = 0;
-    int mouseY = 0;
 
     public int getMouseX() {
         return mouseX;
@@ -101,7 +98,7 @@ public class RemoteScreen extends JPanel {
         if (this.image == null) {
             image = new BufferedImage(1920, 1080, BufferedImage.TYPE_3BYTE_BGR);
         }
-        var raster     = ((BufferedImage) image).getRaster();
+        var raster = ((BufferedImage) image).getRaster();
         var dataBuffer = (DataBufferByte) raster.getDataBuffer();
         System.arraycopy(bytes, 0, dataBuffer.getData(), 0, bytes.length);
     }
@@ -110,7 +107,7 @@ public class RemoteScreen extends JPanel {
         if (this.image == null) {
             image = new BufferedImage(1920, 1080, BufferedImage.TYPE_3BYTE_BGR);
         }
-        var raster     = ((BufferedImage) image).getRaster();
+        var raster = ((BufferedImage) image).getRaster();
         var dataBuffer = (DataBufferByte) raster.getDataBuffer();
         System.arraycopy(bytes, offset, dataBuffer.getData(), 0, len);
     }
@@ -122,7 +119,7 @@ public class RemoteScreen extends JPanel {
             return;
         }
         g.drawImage(image, 0, 0, null);
-        long   currentTime = System.nanoTime();
+        long currentTime = System.nanoTime();
         double timeElapsed = (double) (currentTime - lastDrawnTime) / 1_000_000;
         drawMousePointer(g, mouseX, mouseY);
         g.drawString(String.format("%f ms", timeElapsed), 300, 400);
@@ -139,11 +136,13 @@ public class RemoteScreen extends JPanel {
         g.drawImage(image, 0, 0, null);
         long drawEnd = System.nanoTime();
 
-        long   currentTime = System.nanoTime();
+        long currentTime = System.nanoTime();
         double timeElapsed = (double) (currentTime - lastDrawnTime) / 1_000_000;
         g.drawString(String.format("Elapsed  :  %f ms\n", timeElapsed), DEBUG_STRING_XPOS, DEBUG_STRING_XPOS);
-        g.drawString(String.format("Draw Bitmap:%f ms\n", (double) (drawEnd - drawBegin) / 1_000_000), DEBUG_STRING_XPOS, DEBUG_STRING_XPOS + DEFAULT_FONT_SIZE);
-        g.drawString(String.format("Expected :  %d FPS\n", (int) (1000 / timeElapsed)), DEBUG_STRING_XPOS, DEBUG_STRING_XPOS + DEFAULT_FONT_SIZE * 2);
+        g.drawString(String.format("Draw Bitmap:%f ms\n", (double) (drawEnd - drawBegin) / 1_000_000),
+                     DEBUG_STRING_XPOS, DEBUG_STRING_XPOS + DEFAULT_FONT_SIZE);
+        g.drawString(String.format("Expected :  %d FPS\n", (int) (1000 / timeElapsed)), DEBUG_STRING_XPOS,
+                     DEBUG_STRING_XPOS + DEFAULT_FONT_SIZE * 2);
         lastDrawnTime = currentTime;
         drawMousePointer(g, mouseX, mouseY);
         g.drawString(Long.toString(System.nanoTime()), 10, 10);

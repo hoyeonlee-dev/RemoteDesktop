@@ -8,15 +8,13 @@ import java.awt.*;
  * 클라이언트 측에서 받은 마우스 이벤트 및 키 이벤트를 처리합니다.
  */
 public class RemoteMouseHandler {
-    private Robot robot;
-
-    // 화면 크기에 대한 변수
-    private int screenWidth;
-    private int screenHeight;
-
     // 좌표 변환 상수
     private static final double CONVERSION_FACTOR_X = 1.0; // X축 변환 비율
     private static final double CONVERSION_FACTOR_Y = 1.0; // Y축 변환 비율
+    private Robot robot;
+    // 화면 크기에 대한 변수
+    private int screenWidth;
+    private int screenHeight;
 
     public RemoteMouseHandler() {
         try {
@@ -41,9 +39,10 @@ public class RemoteMouseHandler {
 
     public void handleKeyEvent(KeyEventInfo keyEventInfo) {
         // 클라이언트로부터 전송된 키 이벤트 처리
-        System.out.println("받은 키 이벤트: KeyCode=" + keyEventInfo.getKeyCode() + ", KeyPress=" + keyEventInfo.isKeyPress());
+        System.out.println(
+                "받은 키 이벤트: KeyCode=" + keyEventInfo.getKeyCode() + ", KeyPress=" + keyEventInfo.isKeyPress());
 
-        int     keyCode  = keyEventInfo.getKeyCode();
+        int keyCode = keyEventInfo.getKeyCode();
         boolean keyPress = keyEventInfo.isKeyPress();
 
         if (keyPress) {

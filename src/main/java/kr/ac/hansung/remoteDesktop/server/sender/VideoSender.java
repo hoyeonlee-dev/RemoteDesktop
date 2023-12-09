@@ -14,14 +14,14 @@ public class VideoSender implements Closeable {
 
     private final ObjectOutputStream videoInfoOutputStream;
 
-    private final byte[]        compressBuffer;
-    private       BufferedImage bufferedImage = null;
-    private       boolean       isClosed;
+    private final byte[] compressBuffer;
+    private BufferedImage bufferedImage = null;
+    private boolean isClosed;
 
     public VideoSender(ObjectOutputStream videoOutputStream) throws IOException {
         videoInfoOutputStream = videoOutputStream;
-        compressBuffer        = new byte[20 * 1024 * 1024];
-        isClosed              = false;
+        compressBuffer = new byte[20 * 1024 * 1024];
+        isClosed = false;
     }
 
     public boolean isClosed() {
@@ -34,14 +34,15 @@ public class VideoSender implements Closeable {
             videoInfoOutputStream.writeObject(new ImageInfo(ImageInfo.Type.NO_UPDATE, 0));
             videoInfoOutputStream.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
     }
 
     public boolean sendVideo(byte[] buffer, int width, int height) {
         if (isClosed) return false;
         if (bufferedImage == null) bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-        else if (bufferedImage.getWidth() != width || bufferedImage.getHeight() != height) bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+        else if (bufferedImage.getWidth() != width || bufferedImage.getHeight() != height)
+            bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         if (buffer.length == 0) {
             try {
                 videoInfoOutputStream.writeInt(0);
@@ -62,7 +63,7 @@ public class VideoSender implements Closeable {
             videoInfoOutputStream.write(compressBuffer, 0, compressor.getCompressedSize());
             videoInfoOutputStream.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             return false;
         }
         return true;

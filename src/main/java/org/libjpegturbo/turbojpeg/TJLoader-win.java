@@ -31,9 +31,9 @@ package org.libjpegturbo.turbojpeg;
 import kr.ac.hansung.remoteDesktop.util.DLLLoader;
 
 final class TJLoader {
-  static void load() {
+    static void load() {
 //    System.loadLibrary("@TURBOJPEG_DLL_NAME@");
-    DLLLoader.LoadDLL("turbojpeg.dll");
+        DLLLoader.LoadDLL("turbojpeg.dll");
 
-  }
+    }
 }

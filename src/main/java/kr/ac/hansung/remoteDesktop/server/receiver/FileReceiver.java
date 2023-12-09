@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 public class FileReceiver {
 
     private Consumer<FileSendRequest> onFileSendRequestReceived;
-    private Consumer<FileMessage>     onFileMessageReceived;
+    private Consumer<FileMessage> onFileMessageReceived;
 
     public Consumer<FileSendRequest> getOnFileSendRequestReceived() {
         return onFileSendRequestReceived;

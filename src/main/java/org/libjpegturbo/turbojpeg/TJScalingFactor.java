@@ -34,82 +34,79 @@ package org.libjpegturbo.turbojpeg;
  */
 public class TJScalingFactor {
 
-  /**
-   * Create a TurboJPEG scaling factor instance.
-   *
-   * @param num numerator
-   * @param denom denominator
-   */
-  @SuppressWarnings("checkstyle:HiddenField")
-  public TJScalingFactor(int num, int denom) {
-    if (num < 1 || denom < 1)
-      throw new IllegalArgumentException("Numerator and denominator must be >= 1");
-    this.num = num;
-    this.denom = denom;
-  }
+    /**
+     * Numerator
+     */
+    private int num = 1;
+    /**
+     * Denominator
+     */
+    private int denom = 1;
 
-  /**
-   * Returns numerator
-   *
-   * @return numerator
-   */
-  public int getNum() {
-    return num;
-  }
+    /**
+     * Create a TurboJPEG scaling factor instance.
+     *
+     * @param num   numerator
+     * @param denom denominator
+     */
+    @SuppressWarnings("checkstyle:HiddenField")
+    public TJScalingFactor(int num, int denom) {
+        if (num < 1 || denom < 1)
+            throw new IllegalArgumentException("Numerator and denominator must be >= 1");
+        this.num = num;
+        this.denom = denom;
+    }
 
-  /**
-   * Returns denominator
-   *
-   * @return denominator
-   */
-  public int getDenom() {
-    return denom;
-  }
+    /**
+     * Returns numerator
+     *
+     * @return numerator
+     */
+    public int getNum() {
+        return num;
+    }
 
-  /**
-   * Returns the scaled value of <code>dimension</code>.  This method performs
-   * the integer equivalent of
-   * <code>Math.ceil(dimension * scalingFactor)</code>.
-   *
-   * @param dimension width or height to multiply by this scaling factor
-   *
-   * @return the scaled value of <code>dimension</code>.
-   */
-  public int getScaled(int dimension) {
-    return (dimension * num + denom - 1) / denom;
-  }
+    /**
+     * Returns denominator
+     *
+     * @return denominator
+     */
+    public int getDenom() {
+        return denom;
+    }
 
-  /**
-   * Returns true or false, depending on whether this instance and
-   * <code>other</code> have the same numerator and denominator.
-   *
-   * @param other the scaling factor against which to compare this one
-   *
-   * @return true or false, depending on whether this instance and
-   * <code>other</code> have the same numerator and denominator.
-   */
-  public boolean equals(TJScalingFactor other) {
-    return this.num == other.num && this.denom == other.denom;
-  }
+    /**
+     * Returns the scaled value of <code>dimension</code>.  This method performs
+     * the integer equivalent of
+     * <code>Math.ceil(dimension * scalingFactor)</code>.
+     *
+     * @param dimension width or height to multiply by this scaling factor
+     * @return the scaled value of <code>dimension</code>.
+     */
+    public int getScaled(int dimension) {
+        return (dimension * num + denom - 1) / denom;
+    }
 
-  /**
-   * Returns true or false, depending on whether this instance is equal to
-   * 1/1.
-   *
-   * @return true or false, depending on whether this instance is equal to
-   * 1/1.
-   */
-  public boolean isOne() {
-    return num == 1 && denom == 1;
-  }
+    /**
+     * Returns true or false, depending on whether this instance and
+     * <code>other</code> have the same numerator and denominator.
+     *
+     * @param other the scaling factor against which to compare this one
+     * @return true or false, depending on whether this instance and
+     * <code>other</code> have the same numerator and denominator.
+     */
+    public boolean equals(TJScalingFactor other) {
+        return this.num == other.num && this.denom == other.denom;
+    }
 
-  /**
-   * Numerator
-   */
-  private int num = 1;
-
-  /**
-   * Denominator
-   */
-  private int denom = 1;
+    /**
+     * Returns true or false, depending on whether this instance is equal to
+     * 1/1.
+     *
+     * @return true or false, depending on whether this instance is equal to
+     * 1/1.
+     */
+    public boolean isOne() {
+        return num == 1 && denom == 1;
+    }
 }

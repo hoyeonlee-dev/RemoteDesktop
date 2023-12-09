@@ -5,11 +5,11 @@ import java.io.Serializable;
 public class KeyEventInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final int     keyCode;
+    private final int keyCode;
     private final boolean keyPress;
 
     public KeyEventInfo(int keyCode, boolean keyPress) {
-        this.keyCode  = keyCode;
+        this.keyCode = keyCode;
         this.keyPress = keyPress;
     }
 

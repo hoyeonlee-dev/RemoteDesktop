@@ -12,11 +12,11 @@ import java.io.ObjectOutputStream;
  */
 public class RemoteKeySender implements Closeable {
     private ObjectOutputStream objectOutputStream;
-    private boolean            isClosed;
+    private boolean isClosed;
 
     public RemoteKeySender(ObjectOutputStream objectOutputStream) {
         this.objectOutputStream = objectOutputStream;
-        isClosed                = false;
+        isClosed = false;
     }
 
     public void sendKeyPress(int keyCode) throws IOException {
@@ -34,6 +34,6 @@ public class RemoteKeySender implements Closeable {
     @Override
     public void close() throws IOException {
         objectOutputStream = null;
-        isClosed           = true;
+        isClosed = true;
     }
 }

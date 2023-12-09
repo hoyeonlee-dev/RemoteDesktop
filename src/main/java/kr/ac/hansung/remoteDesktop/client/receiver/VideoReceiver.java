@@ -8,16 +8,19 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 
+/**
+ * 서버로부터 전송된 영상을 수신하는 클래스
+ */
 public class VideoReceiver implements Closeable {
 
     private final Socket videoSocket;
     byte[] tmp = new byte[20 * 1024 * 1024];
     private ObjectInputStream objectInputStream;
-    private boolean           isClosed;
+    private boolean isClosed;
 
     public VideoReceiver(Socket videoSocket) {
         this.videoSocket = videoSocket;
-        isClosed         = false;
+        isClosed = false;
     }
 
     public int receiveVideo(byte[] buffer) throws IOException {
@@ -38,11 +41,11 @@ public class VideoReceiver implements Closeable {
             return length;
         } catch (IOException e) {
             if (e instanceof EOFException) return -1;
-            e.printStackTrace();
+//            e.printStackTrace();
             System.err.println(e.getMessage());
             return -100;
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             return -100;
         }
     }

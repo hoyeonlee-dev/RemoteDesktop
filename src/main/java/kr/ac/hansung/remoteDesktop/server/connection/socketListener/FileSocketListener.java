@@ -16,10 +16,8 @@ public class FileSocketListener implements Runnable {
 
     OnFileReceivedListener listener;
 
-    public interface OnFileReceivedListener {
-        boolean receiveFileTransferRequest(FileSendRequest fileSendRequest);
-
-        void receiveFile(FileMessage fileMessage);
+    public FileSocketListener(OnFileReceivedListener listener) {
+        this.listener = listener;
     }
 
     public OnFileReceivedListener getListener() {
@@ -27,10 +25,6 @@ public class FileSocketListener implements Runnable {
     }
 
     public void setListener(OnFileReceivedListener listener) {
-        this.listener = listener;
-    }
-
-    public FileSocketListener(OnFileReceivedListener listener) {
         this.listener = listener;
     }
 
@@ -42,9 +36,9 @@ public class FileSocketListener implements Runnable {
                 var accepted = serverSocket.accept();
                 new Thread(() -> {
                     try {
-                        var inputStream  = new ObjectInputStream(accepted.getInputStream());
+                        var inputStream = new ObjectInputStream(accepted.getInputStream());
                         var outputStream = new ObjectOutputStream(accepted.getOutputStream());
-                        var fileRequest  = inputStream.readObject();
+                        var fileRequest = inputStream.readObject();
                         if (fileRequest instanceof FileSendRequest castedRequest) {
                             if (listener.receiveFileTransferRequest(castedRequest)) {
                                 // 사용자가 파일 수신을 수락한 경우
@@ -75,5 +69,11 @@ public class FileSocketListener implements Runnable {
         } catch (IOException e) {
 
         }
+    }
+
+    public interface OnFileReceivedListener {
+        boolean receiveFileTransferRequest(FileSendRequest fileSendRequest);
+
+        void receiveFile(FileMessage fileMessage);
     }
 }

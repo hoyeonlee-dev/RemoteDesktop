@@ -5,18 +5,18 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class AskPasswordDialog extends JDialog {
-    JFrame         hostWindow;
+    private final String QUESTION_WHEN_FIRST_TIME = "암호를 입력하세요";
+    private final String QUESTION_WHEN_WRONG_PASSWORD = "틀렸습니다. 다시 입력하세요";
+    JFrame hostWindow;
     ActionListener submit;
     ActionListener cancel;
-    private final String QUESTION_WHEN_FIRST_TIME     = "암호를 입력하세요";
-    private final String QUESTION_WHEN_WRONG_PASSWORD = "틀렸습니다. 다시 입력하세요";
     JTextField textField;
-    Type       type;
+    Type type;
 
     public AskPasswordDialog(Type type, JFrame hostWindow) {
         super(hostWindow, true);
         this.hostWindow = hostWindow;
-        this.type       = type;
+        this.type = type;
     }
 
     private void configureDialog() {
@@ -86,16 +86,6 @@ public class AskPasswordDialog extends JDialog {
         return buttonPanel;
     }
 
-    public enum Type {
-        FIRST(0),
-        WRONG(1);
-        int value;
-
-        Type(int value) {
-            this.value = value;
-        }
-    }
-
     private JButton createOkButton() {
         var okButton = new JButton("전송");
         okButton.addActionListener(submit);
@@ -110,7 +100,17 @@ public class AskPasswordDialog extends JDialog {
 
     public void start() {
         configureDialog();
-    	setDialogSize(300, 200);
+        setDialogSize(300, 200);
         setVisible(true);
+    }
+
+    public enum Type {
+        FIRST(0),
+        WRONG(1);
+        int value;
+
+        Type(int value) {
+            this.value = value;
+        }
     }
 }

@@ -52,7 +52,7 @@ public class FileDropListener implements java.awt.dnd.DropTargetListener {
     public void drop(DropTargetDropEvent event) {
         event.acceptDrop(DnDConstants.ACTION_COPY);
         Transferable transferable = event.getTransferable();
-        DataFlavor[] flavors      = transferable.getTransferDataFlavors();
+        DataFlavor[] flavors = transferable.getTransferDataFlavors();
         if (fileDropHandlers.size() == 0) {
             event.dropComplete(true);
             return;

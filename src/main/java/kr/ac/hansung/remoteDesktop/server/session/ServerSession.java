@@ -18,23 +18,23 @@ import java.net.Socket;
 
 public class ServerSession extends Session implements Closeable {
 
-    private final String        sessionID;
-    private       MessageSender messageSender;
-    private       VideoSender   videoSender;
+    private final String sessionID;
+    private MessageSender messageSender;
+    private VideoSender videoSender;
 
     private RemoteInputReceiver remoteInputReceiver;
 
     private FileReceiver fileReceiver;
 
     private ObjectOutputStream videoOut;
-    private ObjectInputStream  controlIn;
+    private ObjectInputStream controlIn;
     private ObjectOutputStream controlOut;
-    private boolean            isClosed;
+    private boolean isClosed;
 
     public ServerSession(String sessionID) {
         super(null, null);
         this.sessionID = sessionID;
-        isClosed       = false;
+        isClosed = false;
     }
 
     public String getSessionID() {
@@ -69,13 +69,13 @@ public class ServerSession extends Session implements Closeable {
 
     public void attachControlSocket(Socket controlSocket) throws IOException {
         super.setControlSocket(controlSocket);
-        controlOut    = new ObjectOutputStream(controlSocket.getOutputStream());
+        controlOut = new ObjectOutputStream(controlSocket.getOutputStream());
         messageSender = new MessageSender(controlOut);
     }
 
     public void attachVideoSocket(Socket videoSocket) throws IOException {
         super.setVideoSocket(videoSocket);
-        videoOut    = new ObjectOutputStream(videoSocket.getOutputStream());
+        videoOut = new ObjectOutputStream(videoSocket.getOutputStream());
         videoSender = new VideoSender(videoOut);
     }
 
@@ -114,26 +114,39 @@ public class ServerSession extends Session implements Closeable {
     }
 
     public boolean passwordAuthentication() throws IOException, ClassNotFoundException {
-        if (Settings.password.isEmpty())
-            controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD, new PasswordMessage(PasswordMessage.Type.PASSWORD_NOT_REQUIRED, sessionID)));
-        controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD, new PasswordMessage(PasswordMessage.Type.PASSWORD_REQUIRED, "")));
+        if (Settings.password.isEmpty()) {
+            controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
+                                                     new PasswordMessage(PasswordMessage.Type.PASSWORD_NOT_REQUIRED,
+                                                                         sessionID)));
+            if (controlIn == null) controlIn = new ObjectInputStream(controlSocket.getInputStream());
+            return true;
+        }
+        controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
+                                                 new PasswordMessage(PasswordMessage.Type.PASSWORD_REQUIRED, "")));
         controlOut.flush();
         int count = 0;
         if (controlIn == null) controlIn = new ObjectInputStream(controlSocket.getInputStream());
         for (int i = 0; i <= 3; i++) {
             var message = (RemoteMessage) controlIn.readObject();
+            if (message.getType() == RemoteMessage.Type.CONNECTION_CLOSED) return false;
             if (message.getType() != RemoteMessage.Type.PASSWORD) continue;
             if (!message.getData().equals(Settings.password)) {
                 if (++count >= 3) {
-                    controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD, new PasswordMessage(PasswordMessage.Type.CONNECTION_RESET, "")));
+                    controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
+                                                             new PasswordMessage(PasswordMessage.Type.CONNECTION_RESET,
+                                                                                 "")));
                     controlOut.flush();
                     return false;
                 } else {
-                    controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD, new PasswordMessage(PasswordMessage.Type.PASSWORD_WRONG, "")));
+                    controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
+                                                             new PasswordMessage(PasswordMessage.Type.PASSWORD_WRONG,
+                                                                                 "")));
                     controlOut.flush();
                 }
             } else {
-                controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD, new PasswordMessage(PasswordMessage.Type.ACCEPTED, sessionID)));
+                controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
+                                                         new PasswordMessage(PasswordMessage.Type.ACCEPTED,
+                                                                             sessionID)));
                 controlOut.flush();
                 break;
             }

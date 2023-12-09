@@ -6,10 +6,10 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 public class AskFileTransferDialog extends JDialog {
-    JFrame         hostWindow;
+    JFrame hostWindow;
     ActionListener ok;
     ActionListener deny;
-    List<String>   fileNames;
+    List<String> fileNames;
 
     public AskFileTransferDialog(JFrame hostWindow) {
         super(hostWindow, true);

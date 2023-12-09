@@ -17,7 +17,7 @@ public class VideoSocketListener extends SocketListener {
     @Override
     public String getSessionID(Socket socket) {
         try {
-            var bw        = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            var bw = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             var sessionID = bw.readLine();
             return sessionID;
         } catch (IOException e) {

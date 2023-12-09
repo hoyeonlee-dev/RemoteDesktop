@@ -5,13 +5,13 @@ import java.io.Serializable;
 public class MousePosition implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final int     x;
-    private final int     y;
+    private final int x;
+    private final int y;
     private final boolean isClick;
 
     public MousePosition(int x, int y, boolean isClick) {
-        this.x       = x;
-        this.y       = y;
+        this.x = x;
+        this.y = y;
         this.isClick = isClick;
     }
 

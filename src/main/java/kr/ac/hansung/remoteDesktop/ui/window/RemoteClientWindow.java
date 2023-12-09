@@ -18,18 +18,19 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class RemoteClientWindow implements IRDPWindow, Runnable {
+public class RemoteClientWindow implements Runnable {
     private final String address;
-    byte[] buffer = null;
-    private       JFrame       clientWindow;
     private final RemoteScreen remoteScreen;
+    byte[] buffer = null;
     FileDropHandler fileDropHandler;
+    private JFrame clientWindow;
     private boolean shouldStop;
+    private ClientSession clientSession;
 
     public RemoteClientWindow(String title, String address) {
         remoteScreen = createWindow(title);
         this.address = address;
-        shouldStop   = false;
+        shouldStop = false;
 
         buffer = new byte[1920 * 1080 * 4];
     }
@@ -39,8 +40,6 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
             clientWindow.setTitle(title);
         }
     }
-
-    private ClientSession clientSession;
 
     private RemoteScreen createWindow(String title) {
         final RemoteScreen remoteScreen;
@@ -74,16 +73,6 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
         clientWindow.setVisible(false);
     }
 
-    @Override
-    public void stopWindowAndService() {
-        shouldStop = true;
-    }
-
-    @Override
-    public void add(Component component) {
-
-    }
-
     public void add(Component component, Object constraints) {
         clientWindow.add(component, constraints);
     }
@@ -107,6 +96,7 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
             askPasswordWindow.dispose();
         });
         askPasswordWindow.setCancel(r -> {
+            password.set(null);
             askPasswordWindow.dispose();
         });
         askPasswordWindow.start();
@@ -120,14 +110,13 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
             } catch (IOException e) {
             }
         }
-
     }
 
     private ClientSession createClientSession() throws ConnectionFailureException {
         var clientSession = ClientSession.Factory.createClientSession(address, this::askPassword);
-        var receiver      = clientSession.getMessageReceiver();
-        var mouseSender   = clientSession.getMouseSender();
-        var keySender     = clientSession.getKeySender();
+        var receiver = clientSession.getMessageReceiver();
+        var mouseSender = clientSession.getMouseSender();
+        var keySender = clientSession.getKeySender();
 
         clientWindow.addKeyListener(new KeyAdapter() {
             @Override
@@ -154,7 +143,7 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
         clientWindow.getContentPane().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int     button  = e.getButton();
+                int button = e.getButton();
                 boolean pressed = true;
                 try {
                     mouseSender.sendMouseClick(button, pressed);
@@ -183,7 +172,14 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
             }
         });
 
-        receiver.setOnWindowCloseReceived(() -> clientWindow.dispose());
+        receiver.setOnWindowCloseReceived(() -> {
+            try {
+                clientSession.close();
+            } catch (IOException ignored) {
+            } finally {
+                clientWindow.dispose();
+            }
+        });
         receiver.setOnMouseMessageReceived(r -> {
             remoteScreen.setMouseX(r.getX());
             remoteScreen.setMouseY(r.getY());
@@ -203,34 +199,38 @@ public class RemoteClientWindow implements IRDPWindow, Runnable {
     public void run() {
         try {
             clientSession = createClientSession();
-            var receiver = clientSession.getMessageReceiver();
-
-            // 서버로부터의 메시지를 처리하는 스레드
-            new Thread(() -> {
-                while (!clientSession.isClosed()) {
-                    try {
-                        receiver.handleServerMessage();
-                    } catch (IOException | ClassNotFoundException e) {
-                    }
-                }
-            }).start();
-
-            showClient();
-
-            try {
-                while (!clientSession.isClosed()) {
-                    var videoReceiver = clientSession.getVideoReceiver();
-                    int len           = videoReceiver.receiveVideo(getBuffer());
-                    int STOP          = -100;
-                    if (len == STOP) break;
-                    updateRemoteScreen();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.printf("클라이언트 윈도우를 종료합니다. %s", e.getMessage());
+            clientWindow.dispose();
+            return;
         }
+        clientWindow.setTitle(address);
+        var receiver = clientSession.getMessageReceiver();
+
+        // 서버로부터의 메시지를 처리하는 스레드
+        new Thread(() -> {
+            while (!clientSession.isClosed()) {
+                try {
+                    receiver.handleServerMessage();
+                } catch (IOException | ClassNotFoundException e) {
+                    System.out.println(e.getLocalizedMessage());
+                }
+            }
+        }).start();
+
+        showClient();
+
+        try {
+            while (!clientSession.isClosed()) {
+                var videoReceiver = clientSession.getVideoReceiver();
+                int len = videoReceiver.receiveVideo(getBuffer());
+                int STOP = -100;
+                if (len == STOP) break;
+                updateRemoteScreen();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }
