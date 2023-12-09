@@ -1,5 +1,6 @@
 package kr.ac.hansung.remoteDesktop.ui.window.event;
 
+import kr.ac.hansung.remoteDesktop.Settings;
 import kr.ac.hansung.remoteDesktop.message.content.FileMessage;
 import kr.ac.hansung.remoteDesktop.message.content.FileSendRequest;
 import kr.ac.hansung.remoteDesktop.server.connection.socketListener.FileSocketListener;
@@ -47,7 +48,11 @@ public class OnFileReceivedListener implements FileSocketListener.OnFileReceived
     @Override
     public void receiveFile(FileMessage fileMessage) {
         try {
-            var fileOutputStream = new FileOutputStream(String.format("./%s", fileMessage.fileName()));
+        	var savePath = Settings.getInstance().getReceivedFilesPath();
+            var filePath = String.format("%s/%s", savePath, fileMessage.fileName());
+
+          //var fileOutputStream = new FileOutputStream(String.format("./%s", fileMessage.fileName()));
+            var fileOutputStream = new FileOutputStream(filePath);       	
             var content          = new ByteArrayInputStream(fileMessage.content());
             fileOutputStream.write(fileMessage.content());
             fileOutputStream.flush();

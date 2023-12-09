@@ -59,12 +59,21 @@ public class AskPasswordDialog extends JDialog {
     }
 
     private JPanel createInputPanel() {
-        var panel = new JPanel(new GridLayout(2, 1));
+        var panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
         var label = new JLabel();
         label.setText(type == Type.FIRST ? QUESTION_WHEN_FIRST_TIME : QUESTION_WHEN_WRONG_PASSWORD);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setPreferredSize(new Dimension(200, 110));
+        label.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+
         textField = new JTextField(30);
+        textField.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         panel.add(label);
         panel.add(textField);
+
         return panel;
     }
 
@@ -101,6 +110,7 @@ public class AskPasswordDialog extends JDialog {
 
     public void start() {
         configureDialog();
+    	setDialogSize(300, 200);
         setVisible(true);
     }
 }

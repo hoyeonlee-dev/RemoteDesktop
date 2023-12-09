@@ -1,5 +1,6 @@
 package kr.ac.hansung.remoteDesktop.ui.window;
 
+import kr.ac.hansung.remoteDesktop.Settings;
 import kr.ac.hansung.remoteDesktop.client.sender.RemoteMouseSender;
 import kr.ac.hansung.remoteDesktop.ui.component.HintTextField;
 import kr.ac.hansung.remoteDesktop.ui.window.example.RemoteControlFrame;
@@ -144,7 +145,7 @@ public class MainWindow extends JFrame {
         plusButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String computerName = "컴퓨터1";  // 이 부분은 수정할 것임
+                String computerName = "컴퓨터1"; 
                 connectedComputers.add(computerName);
                 updateConnectedComputersPanel();
             }
@@ -175,24 +176,31 @@ public class MainWindow extends JFrame {
         card2Panel.revalidate();
         card2Panel.repaint();
     }
-
+    
     private JPanel createConnectPanel(String computerName) {
-        JPanel p = new JPanel() {
-            @Override
-            public Dimension getPreferredSize() {
-                return new Dimension(200, 550);
-            }
-        };
+        JPanel p = new JPanel(new GridBagLayout());
         p.setBackground(Color.DARK_GRAY);
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 
-        JButton connectButton     = new JButton("연결하기");
-        Font    connectButtonFont = new Font("SansSerif", Font.PLAIN, 15);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+
+        JLabel computerIconLabel = new JLabel(resizeImageIcon(new ImageIcon(getClass().getClassLoader().getResource("computer_icon.png")), 80, 80));
+        computerIconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        p.add(computerIconLabel, gbc);
+
+        gbc.gridy = 1;
+        gbc.insets = new Insets(10, 0, 0, 0); 
+
+        JButton connectButton = new JButton("연결하기");
+        Font connectButtonFont = new Font("SansSerif", Font.PLAIN, 15);
         connectButton.setFont(connectButtonFont);
-        Dimension connectButtonSize = new Dimension(90, 30);
+        Dimension connectButtonSize = new Dimension(120, 30);
         connectButton.setPreferredSize(connectButtonSize);
         connectButton.setBackground(Color.DARK_GRAY);
         connectButton.setForeground(Color.WHITE);
+        connectButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         connectButton.addActionListener(new ActionListener() {
             @Override
@@ -202,20 +210,17 @@ public class MainWindow extends JFrame {
             }
         });
 
-        p.add(connectButton);
+        p.add(connectButton, gbc);
 
         return p;
     }
-
+    
     private void openRemoteControlFrame(Socket serverSocket) {
-        // RemoteControlFrame을 생성하면서 remoteMouseSender 전달
         RemoteControlFrame controlFrame = new RemoteControlFrame(remoteMouseSender);
 
-        // JFrame에 RemoteControlFrame을 추가
         JFrame remoteControlFrame = new JFrame("원격 제어");
         remoteControlFrame.add(controlFrame);
 
-        // 예시: 빈 창을 생성
         remoteControlFrame.setSize(1920, 1080);
         remoteControlFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         remoteControlFrame.setLocationRelativeTo(null);
@@ -247,9 +252,9 @@ public class MainWindow extends JFrame {
                 p.add(createConnectPanel(computerName));
             }
         }
-
-        return p;
-    }
+        
+     return p;
+    }  
 
     private JPanel createSettingsPanel() {
         JPanel p = new JPanel();
@@ -324,12 +329,28 @@ public class MainWindow extends JFrame {
         hb.setPreferredSize(hbSize);
         hb.setBackground(Color.DARK_GRAY);
         hb.setForeground(Color.WHITE);
+        
+        // 파일 저장 위치 버튼
+        JButton fb = new JButton("File");
+        fb.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openFilePathWindow();
+            }
+        });
+        Font fbFont = new Font("SansSerif", Font.PLAIN, 15);
+        fb.setFont(fbFont);
+        Dimension fbSize = new Dimension(70, 30);
+        fb.setPreferredSize(fbSize);
+        fb.setBackground(Color.DARK_GRAY);
+        fb.setForeground(Color.WHITE);
 
         clientPanel = createClientPanel();
         hostPanel   = createHostPanel();
 
         buttonPanel.add(cb);
         buttonPanel.add(hb);
+        buttonPanel.add(fb);
 
         p.add(buttonPanel);
 
@@ -339,11 +360,21 @@ public class MainWindow extends JFrame {
     private JPanel createClientPanel() {
         JPanel p = new JPanel();
         p.setBackground(Color.DARK_GRAY);
+        
         JLabel clientLabel = new JLabel("CLIENT SETTINGS");
         clientLabel.setForeground(Color.WHITE);
         clientLabel.setFont(new Font("SansSerif", Font.PLAIN, 25));
         p.add(clientLabel);
+
         return p;
+    }
+    
+    private void openFilePathWindow() {
+    	FilePathWindow FilePathWindow = new FilePathWindow();  
+    }
+    
+    public void settingsUpdated() {
+        
     }
 
     private JPanel createHostPanel() {
@@ -358,25 +389,58 @@ public class MainWindow extends JFrame {
 
         p.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        JPanel hostingEnabled = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel hostingEnabled = new JPanel();
         hostingEnabled.setBackground(Color.DARK_GRAY);
 
-        JLabel e = new JLabel("Hosting Enabled ");
+        // password text field
+        JTextField passwordTextField = new JTextField(20);
+        passwordTextField.setBackground(Color.DARK_GRAY);
+        passwordTextField.setForeground(Color.WHITE);
+        hostingEnabled.add(passwordTextField);
+
+        hostingEnabled.add(Box.createRigidArea(new Dimension(50, 0)));
+
+        // Enable Hosting ON/OFF
+        JLabel e = new JLabel("Enable Hosting ");
         e.setForeground(Color.WHITE);
         e.setFont(new Font("SansSerif", Font.PLAIN, 20));
         hostingEnabled.add(e);
 
-        String[]          comboBoxItems = {"Disabled", "Enabled"};
-        JComboBox<String> comboBox      = new JComboBox<>(comboBoxItems);
+        hostingEnabled.add(Box.createRigidArea(new Dimension(0, 0)));
+
+        String[] comboBoxItems = {"ON", "OFF"};
+        JComboBox<String> comboBox = new JComboBox<>(comboBoxItems);
         comboBox.setBackground(Color.DARK_GRAY);
         comboBox.setForeground(Color.WHITE);
         hostingEnabled.add(comboBox);
+        
+        comboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedOption = (String) comboBox.getSelectedItem();
+                
+                if ("ON".equals(selectedOption)) {
+                    //예: remoteHostDaemon.startHosting();
+                } else {
+                    //예: remoteHostDaemon.stopHosting();
+                }
+            }
+        });
 
+        // update Settings.password
+        passwordTextField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Settings.password = passwordTextField.getText();
+                
+            }
+        });
+        
         p.add(hostingEnabled);
 
         return p;
     }
-
+    
     private void createControlPanel() {
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
@@ -448,4 +512,4 @@ public class MainWindow extends JFrame {
         Image resizedImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new ImageIcon(resizedImage);
     }
-} 
+}  
