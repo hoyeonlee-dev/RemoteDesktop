@@ -15,7 +15,7 @@ import java.util.List;
 
 
 public class MainWindow extends JFrame {
-    private final RemoteHostDaemon remoteHostDaemon;
+    private RemoteHostDaemon remoteHostDaemon;
     private final List<String> connectedComputers = new ArrayList<>();
     private JPanel cardPanel;
     private JPanel card2Panel;
@@ -36,9 +36,14 @@ public class MainWindow extends JFrame {
 
     public MainWindow() {
         super("원격 데스크톱");
-        remoteHostDaemon = new RemoteHostDaemon();
-        remoteHostDaemon.setParentWindow(this);
-        remoteHostDaemon.start();
+        if (Settings.getInstance().isAllowHosting()) {
+            remoteHostDaemon = new RemoteHostDaemon();
+            remoteHostDaemon.setParentWindow(this);
+            remoteHostDaemon.start();
+        } else {
+            remoteHostDaemon = null;
+        }
+
         buildGUI();
         setSize(1300, 800);
         setLocationRelativeTo(null);
@@ -394,7 +399,7 @@ public class MainWindow extends JFrame {
         JTextField passwordTextField = new JTextField(20);
         passwordTextField.setBackground(Color.DARK_GRAY);
         passwordTextField.setForeground(Color.WHITE);
-        passwordTextField.setText(Settings.password);
+        passwordTextField.setText(Settings.getInstance().getPassword());
         hostingEnabled.add(passwordTextField);
 
         hostingEnabled.add(Box.createRigidArea(new Dimension(50, 0)));
@@ -413,20 +418,14 @@ public class MainWindow extends JFrame {
         JComboBox<String> comboBox = new JComboBox<>(comboBoxItems);
         comboBox.setBackground(Color.DARK_GRAY);
         comboBox.setForeground(Color.WHITE);
+
+        MainWindow t = this;
         hostingEnabled.add(comboBox);
 
-        comboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String selectedOption = (String) comboBox.getSelectedItem();
-
-                if ("ON".equals(selectedOption)) {
-                    //예: remoteHostDaemon.startHosting();
-                } else {
-                    //예: remoteHostDaemon.stopHosting();
-                }
-            }
-        });
+        JComboBox<String> comboBox2 = new JComboBox<>(comboBoxItems);
+        comboBox2.setBackground(Color.DARK_GRAY);
+        comboBox2.setForeground(Color.WHITE);
+        hostingEnabled.add(comboBox2);
 
         // update Settings.password
         passwordTextField.addKeyListener(new KeyListener() {
@@ -442,10 +441,39 @@ public class MainWindow extends JFrame {
 
             @Override
             public void keyReleased(KeyEvent e) {
-                Settings.password = passwordTextField.getText().trim();
+                Settings.getInstance().setPassword(passwordTextField.getText().trim());
             }
         });
 
+        comboBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                String item = (String) e.getItem();
+                boolean selected = e.getStateChange() == ItemEvent.SELECTED;
+                if (item.equals("ON") && selected) {
+                    remoteHostDaemon = new RemoteHostDaemon();
+                    remoteHostDaemon.setParentWindow(t);
+                    remoteHostDaemon.start();
+                } else if (item.equals("OFF") && selected) {
+                    if (remoteHostDaemon != null) {
+                        remoteHostDaemon.stop();
+                    }
+                }
+            }
+        });
+
+        comboBox2.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                String item = (String) e.getItem();
+                boolean selected = e.getStateChange() == ItemEvent.SELECTED;
+                if (item.equals("ON") && selected) {
+                    Settings.getInstance().setAllowClientInput(true);
+                } else if (item.equals("OFF") && selected) {
+                    Settings.getInstance().setAllowClientInput(false);
+                }
+            }
+        });
         p.add(hostingEnabled);
 
         return p;

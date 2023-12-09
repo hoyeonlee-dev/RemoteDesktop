@@ -114,7 +114,7 @@ public class ServerSession extends Session implements Closeable {
     }
 
     public boolean passwordAuthentication() throws IOException, ClassNotFoundException {
-        if (Settings.password.isEmpty()) {
+        if (Settings.getInstance().getPassword().isEmpty()) {
             controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
                                                      new PasswordMessage(PasswordMessage.Type.PASSWORD_NOT_REQUIRED,
                                                                          sessionID)));
@@ -130,7 +130,7 @@ public class ServerSession extends Session implements Closeable {
             var message = (RemoteMessage) controlIn.readObject();
             if (message.getType() == RemoteMessage.Type.CONNECTION_CLOSED) return false;
             if (message.getType() != RemoteMessage.Type.PASSWORD) continue;
-            if (!message.getData().equals(Settings.password)) {
+            if (!message.getData().equals(Settings.getInstance().getPassword())) {
                 if (++count >= 3) {
                     controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
                                                              new PasswordMessage(PasswordMessage.Type.CONNECTION_RESET,

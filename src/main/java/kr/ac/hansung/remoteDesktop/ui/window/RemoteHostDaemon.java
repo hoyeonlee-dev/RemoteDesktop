@@ -22,9 +22,7 @@ public class RemoteHostDaemon {
     public static final int EXPECTED_REFRESH_RATE = 20;
     private static final DXGIScreenCapture dxgiCapture = new DXGIScreenCapture(1920, 1080);
     private static final DisplaySetting displaySettings = new DisplaySetting();
-    private final int width = 600;
     private final SessionManager sessionManager;
-    private final int height = 500;
     Thread thread = null;
     DisplaySetting displaySetting;
     long lastSecond = 0;
@@ -34,8 +32,10 @@ public class RemoteHostDaemon {
     Runnable mainLoop = new Runnable() {
         @Override
         public void run() {
+
             while (true) {
                 waitUntilClientConnection(); // 클라이언트가 접속할 때까지 대기
+                if (thread == null) break;
 
                 displaySettings.backupDisplaySettings();
 
@@ -110,6 +110,7 @@ public class RemoteHostDaemon {
     }
 
     public void stop() {
+        thread = null;
         stopSocketListeners();
     }
 
@@ -148,6 +149,12 @@ public class RemoteHostDaemon {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        try {
+            fileSocketListener.stopServer();
+            fileSocketListener = null;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -155,6 +162,7 @@ public class RemoteHostDaemon {
      */
     public void waitUntilClientConnection() {
         while (sessionManager.getSessions().size() == 0) {
+            if (thread == null) return;
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {

@@ -4,10 +4,13 @@ import javax.swing.*;
 import java.io.File;
 
 public class Settings {
-    public static String password = "1234";
-    private static Settings instance;
+    private String password = "";
+    private boolean allowClientInput = true;
+    private boolean allowHosting = true;
+
     private static String receivedFilesPath;
     private static String savePath;
+
 
     private Settings() {
         receivedFilesPath = System.getProperty("user.dir");
@@ -15,10 +18,39 @@ public class Settings {
     }
 
     public static Settings getInstance() {
-        if (instance == null) {
-            instance = new Settings();
+        return InstanceHolder.getInstance();
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isAllowClientInput() {
+        return allowClientInput;
+    }
+
+    public void setAllowClientInput(boolean allowClientInput) {
+        this.allowClientInput = allowClientInput;
+    }
+
+    public boolean isAllowHosting() {
+        return allowHosting;
+    }
+
+    public void setAllowHosting(boolean allowHosting) {
+        this.allowHosting = allowHosting;
+    }
+
+    private static class InstanceHolder {
+        private static final Settings instance = new Settings();
+
+        public static Settings getInstance() {
+            return instance;
         }
-        return instance;
     }
 
     public String getSavePath() {

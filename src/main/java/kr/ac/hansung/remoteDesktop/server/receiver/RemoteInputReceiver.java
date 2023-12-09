@@ -1,5 +1,6 @@
 package kr.ac.hansung.remoteDesktop.server.receiver;
 
+import kr.ac.hansung.remoteDesktop.Settings;
 import kr.ac.hansung.remoteDesktop.exception.ConnectionClosedByClientException;
 import kr.ac.hansung.remoteDesktop.message.RemoteMessage;
 import kr.ac.hansung.remoteDesktop.message.content.KeyboardMessage;
@@ -66,6 +67,7 @@ public class RemoteInputReceiver implements Closeable {
         System.out.printf("mouse click : code : %s  Click %b\n",
                           mouseClick.getKeyCode() == MouseClick.RIGHT_BUTTON ? "Right" : "Left",
                           mouseClick.isPressed());
+        if (!Settings.getInstance().isAllowClientInput()) return;
         if (mouseClick.getKeyCode() == MouseClick.LEFT_BUTTON) {
             robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
             robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
@@ -79,6 +81,7 @@ public class RemoteInputReceiver implements Closeable {
     private void processMouseMove(MousePosition mouseMessage) {
         System.out.printf("mouse move : x : %d  y : %d Click %b\n", mouseMessage.getX(),
                           mouseMessage.getY(), mouseMessage.isClick());
+        if (!Settings.getInstance().isAllowClientInput()) return;
         robot.mouseMove(mouseMessage.getX(), mouseMessage.getY());
 
         if (mouseMessage.isClick()) {
@@ -90,6 +93,7 @@ public class RemoteInputReceiver implements Closeable {
     private void processKeyMessage(KeyboardMessage keyMessage) {
         System.out.printf("KeyPressed : KeyCode : %d, isPressed : %b\n", keyMessage.getKeyCode(),
                           keyMessage.isPressed());
+        if (!Settings.getInstance().isAllowClientInput()) return;
         int keyCode = keyMessage.getKeyCode();
         boolean isPressed = keyMessage.isPressed();
 

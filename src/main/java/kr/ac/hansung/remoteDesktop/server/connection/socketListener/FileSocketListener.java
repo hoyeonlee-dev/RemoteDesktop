@@ -59,7 +59,6 @@ public class FileSocketListener implements Runnable {
 
             }
         } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -69,6 +68,10 @@ public class FileSocketListener implements Runnable {
         } catch (IOException e) {
 
         }
+    }
+
+    public void stopServer() throws IOException {
+        if (!serverSocket.isClosed()) serverSocket.close();
     }
 
     public interface OnFileReceivedListener {
