@@ -11,6 +11,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 파일 전송을 담당하는 클래스
+ */
 public class FileSender {
     private final ClientSession clientSession;
 
@@ -20,11 +23,11 @@ public class FileSender {
 
     public void sendFiles(List<File> files) throws FileTransferFailedException {
         try (Socket socket = clientSession.createFileSocket()) {
-            var inputStream  = socket.getInputStream();
+            var inputStream = socket.getInputStream();
             var outputStream = socket.getOutputStream();
 
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            ObjectInputStream  objectInputStream  = new ObjectInputStream(inputStream);
+            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
 
             var names = new ArrayList<String>();
 

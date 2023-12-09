@@ -8,7 +8,7 @@ import java.io.Serializable;
 public class RemoteMessage implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final Type         type;
+    private final Type type;
     private final Serializable data;
 
     public RemoteMessage(Type type, Serializable data) {

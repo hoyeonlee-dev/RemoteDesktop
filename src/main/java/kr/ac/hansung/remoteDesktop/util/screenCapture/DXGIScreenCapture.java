@@ -20,19 +20,19 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
         DLLLoader.LoadDLL(LIBRARY_NAME);
     }
 
+    private final byte[] frameBuffer;
     BufferedImage bufferedImage;
     private int width;
     private int height;
     private int frameRate;
-    private final byte[] frameBuffer;
 
     public DXGIScreenCapture(int width, int height) {
-        this.width  = width;
+        this.width = width;
         this.height = height;
-        frameRate   = 60;
+        frameRate = 60;
         // bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-        frameBuffer   = new byte[width * height * 3];
+        frameBuffer = new byte[width * height * 3];
         onWindowSizeUpdated();
 
     }
@@ -94,7 +94,8 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
 
         WritableRaster raster = bufferedImage.getRaster();
         DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
-        System.arraycopy(frameBuffer, 0, dataBuffer.getData(), 0, Integer.min(frameBuffer.length, dataBuffer.getData().length));
+        System.arraycopy(frameBuffer, 0, dataBuffer.getData(), 0,
+                         Integer.min(frameBuffer.length, dataBuffer.getData().length));
 
         return bufferedImage;
     }

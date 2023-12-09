@@ -11,5 +11,6 @@ public interface IScreenCapture extends ICaptureResult {
      * 윈도우 창의 크기가 변경 되었을 때 호출 되는 메서드
      */
     void onWindowSizeUpdated();
+
     boolean doCapture();
 }

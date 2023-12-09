@@ -13,11 +13,11 @@ import java.net.Socket;
  */
 public class RemoteInputProcessor implements Runnable {
     private final Socket clientSocket;
-    private final Robot  robot;
+    private final Robot robot;
 
     public RemoteInputProcessor(Socket clientSocket, Robot robot) {
         this.clientSocket = clientSocket;
-        this.robot        = robot;
+        this.robot = robot;
     }
 
     @Override
@@ -40,7 +40,8 @@ public class RemoteInputProcessor implements Runnable {
 
     private void processMouseMessage(MousePosition mouseMessage) {
         // 마우스 메시지 처리 로직 작성
-        System.out.println("Received Mouse Message: x=" + mouseMessage.getX() + ", y=" + mouseMessage.getY() + ", click=" + mouseMessage.isClick());
+        System.out.println(
+                "Received Mouse Message: x=" + mouseMessage.getX() + ", y=" + mouseMessage.getY() + ", click=" + mouseMessage.isClick());
 
         // 여기에서 좌표 변환 및 로봇 조작 로직 추가
         robot.mouseMove(mouseMessage.getX(), mouseMessage.getY());
@@ -53,10 +54,11 @@ public class RemoteInputProcessor implements Runnable {
 
     private void processKeyMessage(KeyboardMessage keyMessage) {
         // 키 메시지 처리 로직 작성
-        System.out.println("Received Key Message: keyCode=" + keyMessage.getKeyCode() + ", pressed=" + keyMessage.isPressed());
+        System.out.println(
+                "Received Key Message: keyCode=" + keyMessage.getKeyCode() + ", pressed=" + keyMessage.isPressed());
 
         // 여기에서 로봇 조작 로직 추가
-        int     keyCode   = keyMessage.getKeyCode();
+        int keyCode = keyMessage.getKeyCode();
         boolean isPressed = keyMessage.isPressed();
 
         if (isPressed) {

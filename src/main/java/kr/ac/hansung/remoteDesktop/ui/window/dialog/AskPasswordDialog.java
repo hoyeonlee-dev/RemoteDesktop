@@ -5,18 +5,18 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class AskPasswordDialog extends JDialog {
-    JFrame         hostWindow;
+    private final String QUESTION_WHEN_FIRST_TIME = "암호를 입력하세요";
+    private final String QUESTION_WHEN_WRONG_PASSWORD = "틀렸습니다. 다시 입력하세요";
+    JFrame hostWindow;
     ActionListener submit;
     ActionListener cancel;
-    private final String QUESTION_WHEN_FIRST_TIME     = "암호를 입력하세요";
-    private final String QUESTION_WHEN_WRONG_PASSWORD = "틀렸습니다. 다시 입력하세요";
     JTextField textField;
-    Type       type;
+    Type type;
 
     public AskPasswordDialog(Type type, JFrame hostWindow) {
         super(hostWindow, true);
         this.hostWindow = hostWindow;
-        this.type       = type;
+        this.type = type;
     }
 
     private void configureDialog() {
@@ -59,12 +59,21 @@ public class AskPasswordDialog extends JDialog {
     }
 
     private JPanel createInputPanel() {
-        var panel = new JPanel(new GridLayout(2, 1));
+        var panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
         var label = new JLabel();
         label.setText(type == Type.FIRST ? QUESTION_WHEN_FIRST_TIME : QUESTION_WHEN_WRONG_PASSWORD);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setPreferredSize(new Dimension(200, 110));
+        label.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+
         textField = new JTextField(30);
+        textField.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         panel.add(label);
         panel.add(textField);
+
         return panel;
     }
 
@@ -75,16 +84,6 @@ public class AskPasswordDialog extends JDialog {
         buttonPanel.add(createDenyButton(), BorderLayout.CENTER);
 
         return buttonPanel;
-    }
-
-    public enum Type {
-        FIRST(0),
-        WRONG(1);
-        int value;
-
-        Type(int value) {
-            this.value = value;
-        }
     }
 
     private JButton createOkButton() {
@@ -101,6 +100,17 @@ public class AskPasswordDialog extends JDialog {
 
     public void start() {
         configureDialog();
+        setDialogSize(300, 200);
         setVisible(true);
+    }
+
+    public enum Type {
+        FIRST(0),
+        WRONG(1);
+        int value;
+
+        Type(int value) {
+            this.value = value;
+        }
     }
 }

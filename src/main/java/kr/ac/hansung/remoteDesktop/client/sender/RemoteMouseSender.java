@@ -15,11 +15,11 @@ import java.io.ObjectOutputStream;
 public class RemoteMouseSender implements Closeable {
 
     private ObjectOutputStream objectOutputStream;
-    private boolean            isClosed;
+    private boolean isClosed;
 
     public RemoteMouseSender(ObjectOutputStream objectOutputStream) {
         this.objectOutputStream = objectOutputStream;
-        isClosed                = false;
+        isClosed = false;
     }
 
     public void sendMouseMove(int x, int y) throws IOException {
@@ -44,7 +44,8 @@ public class RemoteMouseSender implements Closeable {
      */
     public void sendKeyEvent(int keyCode, boolean keyPress) throws IOException {
         if (isClosed) return;
-        RemoteMessage message = new RemoteMessage(RemoteMessage.Type.MOUSE_POSITION, new KeyEventInfo(keyCode, keyPress));
+        RemoteMessage message = new RemoteMessage(RemoteMessage.Type.MOUSE_POSITION,
+                                                  new KeyEventInfo(keyCode, keyPress));
         objectOutputStream.writeObject(message);
         objectOutputStream.flush();
     }
@@ -52,7 +53,7 @@ public class RemoteMouseSender implements Closeable {
     @Override
     public void close() throws IOException {
         objectOutputStream = null;
-        isClosed           = true;
+        isClosed = true;
     }
 }
 

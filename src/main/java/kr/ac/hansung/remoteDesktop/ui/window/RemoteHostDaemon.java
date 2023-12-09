@@ -19,25 +19,23 @@ import java.util.Map;
 import java.util.Set;
 
 public class RemoteHostDaemon {
-    public static final  int               EXPECTED_REFRESH_RATE = 20;
-    private static final DXGIScreenCapture dxgiCapture           = new DXGIScreenCapture(1920, 1080);
-    private static final DisplaySetting    displaySettings       = new DisplaySetting();
-
-    Thread thread = null;
-
-    DisplaySetting displaySetting;
-
-    long     lastSecond = 0;
-    int      count      = 0;
-    private final int    width       = 600;
-    private       byte[] savedBuffer = null;
+    public static final int EXPECTED_REFRESH_RATE = 20;
+    private static final DXGIScreenCapture dxgiCapture = new DXGIScreenCapture(1920, 1080);
+    private static final DisplaySetting displaySettings = new DisplaySetting();
     private final SessionManager sessionManager;
+    Thread thread = null;
+    DisplaySetting displaySetting;
+    long lastSecond = 0;
+    int count = 0;
+    private byte[] savedBuffer = null;
     // 스트리밍을 담당하는 스레드의 동작을 정의한 메서드
-    Runnable mainLoop   = new Runnable() {
+    Runnable mainLoop = new Runnable() {
         @Override
         public void run() {
+
             while (true) {
                 waitUntilClientConnection(); // 클라이언트가 접속할 때까지 대기
+                if (thread == null) break;
 
                 displaySettings.backupDisplaySettings();
 
@@ -81,20 +79,19 @@ public class RemoteHostDaemon {
             }
         }
     };
-    private SocketListener     videoSocketListener;
-    private SocketListener     controlSocketListener;
-    private       FileSocketListener fileSocketListener;
-    private final int                height = 500;
-    private       JFrame             parentWindow;
-    private boolean            isListening;
+    private SocketListener videoSocketListener;
+    private SocketListener controlSocketListener;
+    private FileSocketListener fileSocketListener;
+    private JFrame parentWindow;
+    private boolean isListening;
 
     /**
      * 생성자
      */
     public RemoteHostDaemon() {
         sessionManager = new SessionManager();
-        isListening    = false;
-        thread         = new Thread(mainLoop);
+        isListening = false;
+        thread = new Thread(mainLoop);
         thread.start();
     }
 
@@ -113,11 +110,12 @@ public class RemoteHostDaemon {
     }
 
     public void stop() {
+        thread = null;
         stopSocketListeners();
     }
 
     private void startListeningServer() {
-        videoSocketListener   = new VideoSocketListener(sessionManager, Session.VIDEO_PORT);
+        videoSocketListener = new VideoSocketListener(sessionManager, Session.VIDEO_PORT);
         controlSocketListener = new ControlSocketListener(sessionManager, Session.CONTROL_PORT);
 
         fileSocketListener = new FileSocketListener(new OnFileReceivedListener(parentWindow, sessionManager));
@@ -151,6 +149,12 @@ public class RemoteHostDaemon {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        try {
+            fileSocketListener.stopServer();
+            fileSocketListener = null;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -158,6 +162,7 @@ public class RemoteHostDaemon {
      */
     public void waitUntilClientConnection() {
         while (sessionManager.getSessions().size() == 0) {
+            if (thread == null) return;
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -199,7 +204,7 @@ public class RemoteHostDaemon {
         if (diff > 1000) {
             System.out.printf("지난 %.3f초동안 %d 프레임 전송\r", diff, ++count);
             lastSecond = System.nanoTime();
-            count      = 0;
+            count = 0;
         }
     }
 

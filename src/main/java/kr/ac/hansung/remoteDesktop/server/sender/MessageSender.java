@@ -11,11 +11,11 @@ import java.io.ObjectOutputStream;
 public class MessageSender implements Closeable {
 
     private final ObjectOutputStream controlObjectOutputStream;
-    private       boolean            isClosed;
+    private boolean isClosed;
 
     public MessageSender(ObjectOutputStream objectOutputStream) throws IOException {
         controlObjectOutputStream = objectOutputStream;
-        isClosed                  = false;
+        isClosed = false;
     }
 
     public boolean isClosed() {
@@ -24,15 +24,16 @@ public class MessageSender implements Closeable {
 
     public void sendMousePosition(int x, int y) {
         try {
-            controlObjectOutputStream.writeObject(new RemoteMessage(RemoteMessage.Type.MOUSE_POSITION, new MousePosition(x, y, false)));
+            controlObjectOutputStream.writeObject(
+                    new RemoteMessage(RemoteMessage.Type.MOUSE_POSITION, new MousePosition(x, y, false)));
             controlObjectOutputStream.flush();
         } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     public void sendCloseMessage(String message) throws IOException {
-        controlObjectOutputStream.writeObject(new RemoteMessage(RemoteMessage.Type.CONNECTION_CLOSED, new ConnectionClosed(message)));
+        controlObjectOutputStream.writeObject(
+                new RemoteMessage(RemoteMessage.Type.CONNECTION_CLOSED, new ConnectionClosed(message)));
     }
 
     @Override
