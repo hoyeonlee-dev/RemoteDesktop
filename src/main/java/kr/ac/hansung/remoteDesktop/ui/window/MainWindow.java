@@ -6,7 +6,6 @@ import kr.ac.hansung.remoteDesktop.ui.component.HintTextField;
 import kr.ac.hansung.remoteDesktop.ui.window.example.RemoteControlFrame;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.Socket;
@@ -28,8 +27,8 @@ public class MainWindow extends JFrame {
     private JPanel hostPanel;
     private boolean computersVisible = true;
     private boolean settingsVisible = false;
-    private boolean clientVisible = true;
-    private boolean hostVisible = false;
+    private final boolean clientVisible = true;
+    private final boolean hostVisible = false;
     private HintTextField t_search;
     private JLabel ipa;
     
@@ -145,7 +144,7 @@ public class MainWindow extends JFrame {
                 connectedComputers.add(computerName);
                 updateConnectedComputersPanel();
                 
-                ipa.setText(computerName);
+//                ipa.setText(computerName);
             }
         });
 

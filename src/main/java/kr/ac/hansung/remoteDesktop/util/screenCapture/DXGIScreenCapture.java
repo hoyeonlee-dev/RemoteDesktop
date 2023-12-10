@@ -69,6 +69,7 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
         onWindowSizeUpdated();
     }
 
+    //DLL을 이용한 네이티브 메서드 호출
     private native void updateWindowSize();
 
     private native boolean getCapturedScreenByteArray();
@@ -100,6 +101,7 @@ public class DXGIScreenCapture implements IScreenCapture, ICaptureResult {
         return bufferedImage;
     }
 
+    // 서버가 화면을 캡처할 때 사용하는 메서드
     @Override
     public boolean doCapture() {
         return getCapturedScreenByteArray();

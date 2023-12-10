@@ -36,10 +36,12 @@ public class RemoteInputReceiver implements Closeable {
         this.onCloseMessageReceived = onCloseMessageReceived;
     }
 
+    //사용자로부터 도착한 메시지를 해석하고 그에 대한 동작을 실행하는 메서드
     public void processInputMessage() {
         if (isClosed) return;
         try {
             var message = (RemoteMessage) objectInputStream.readObject();
+            System.out.printf("Server : received %s\n", message.toString());
             switch (message.getType()) {
                 case CONNECTION_CLOSED:
                     if (onCloseMessageReceived != null) {
@@ -64,9 +66,6 @@ public class RemoteInputReceiver implements Closeable {
     }
 
     private void processMouseClick(MouseClick mouseClick) {
-        System.out.printf("mouse click : code : %s  Click %b\n",
-                          mouseClick.getKeyCode() == MouseClick.RIGHT_BUTTON ? "Right" : "Left",
-                          mouseClick.isPressed());
         if (!Settings.getInstance().isAllowClientInput()) return;
         if (mouseClick.getKeyCode() == MouseClick.LEFT_BUTTON) {
             robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
@@ -79,8 +78,6 @@ public class RemoteInputReceiver implements Closeable {
     }
 
     private void processMouseMove(MousePosition mouseMessage) {
-        System.out.printf("mouse move : x : %d  y : %d Click %b\n", mouseMessage.getX(),
-                          mouseMessage.getY(), mouseMessage.isClick());
         if (!Settings.getInstance().isAllowClientInput()) return;
         robot.mouseMove(mouseMessage.getX(), mouseMessage.getY());
 
@@ -91,8 +88,6 @@ public class RemoteInputReceiver implements Closeable {
     }
 
     private void processKeyMessage(KeyboardMessage keyMessage) {
-        System.out.printf("KeyPressed : KeyCode : %d, isPressed : %b\n", keyMessage.getKeyCode(),
-                          keyMessage.isPressed());
         if (!Settings.getInstance().isAllowClientInput()) return;
         int keyCode = keyMessage.getKeyCode();
         boolean isPressed = keyMessage.isPressed();

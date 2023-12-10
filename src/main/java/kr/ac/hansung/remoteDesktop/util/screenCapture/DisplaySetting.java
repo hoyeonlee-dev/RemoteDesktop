@@ -2,6 +2,9 @@ package kr.ac.hansung.remoteDesktop.util.screenCapture;
 
 import kr.ac.hansung.remoteDesktop.util.DLLLoader;
 
+/**
+ * 디스플레이 설정을 조작할 때 사용하는 클래스
+ */
 @SuppressWarnings("FieldMayBeFinal")
 public class DisplaySetting {
     private final static String LIBRARY_NAME = "DisplaySetting.dll";

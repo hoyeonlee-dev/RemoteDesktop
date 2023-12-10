@@ -47,7 +47,7 @@ public class OnFileReceivedListener implements FileSocketListener.OnFileReceived
     @Override
     public void receiveFile(FileMessage fileMessage) {
         try {
-            var savePath = Settings.getInstance().getReceivedFilesPath();
+            var savePath = Settings.getInstance().getSavePath();
             var filePath = String.format("%s/%s", savePath, fileMessage.fileName());
             var fileOutputStream = new FileOutputStream(filePath);
             fileOutputStream.write(fileMessage.content());

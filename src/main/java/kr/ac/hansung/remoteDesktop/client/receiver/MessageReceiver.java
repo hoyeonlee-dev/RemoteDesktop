@@ -41,10 +41,12 @@ public class MessageReceiver implements Closeable {
         this.onWindowCloseReceived = onWindowCloseReceived;
     }
 
+    // 서버로부터 도착한 메시지를 처리하는 메서드
     public void handleServerMessage() throws IOException, ClassNotFoundException {
         try {
             var obj = controlObjectInputStream.readObject();
             if (obj instanceof RemoteMessage message) {
+                System.out.printf("Client received : %s\n", message);
                 if (message.getType() == RemoteMessage.Type.CONNECTION_CLOSED) {
                     if (onWindowCloseReceived != null) {
                         onWindowCloseReceived.run();

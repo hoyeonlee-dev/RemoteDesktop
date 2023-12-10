@@ -10,6 +10,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 
+/**
+ * 클라이언트의 반복적인 파일 전송시도를 처리하기 위한 스레드
+ */
 public class FileSocketListener implements Runnable {
     public final static int FILE_PORT = 1237;
     ServerSocket serverSocket;

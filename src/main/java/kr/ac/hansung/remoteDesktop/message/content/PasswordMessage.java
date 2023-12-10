@@ -2,6 +2,7 @@ package kr.ac.hansung.remoteDesktop.message.content;
 
 import java.io.Serializable;
 
+// 접속할 때 암호 인증에 사용하는 메시지
 public record PasswordMessage(Type type, String message) implements Serializable {
     public enum Type {
         PASSWORD_REQUIRED(0),       // 비밀번호 인증이 필요한 경우
@@ -14,5 +15,13 @@ public record PasswordMessage(Type type, String message) implements Serializable
         Type(int value) {
             this.value = value;
         }
+    }
+
+    @Override
+    public String toString() {
+        String sb = "PasswordMessage{" + "type=" + type +
+                ", message='" + message + '\'' +
+                '}';
+        return sb;
     }
 }

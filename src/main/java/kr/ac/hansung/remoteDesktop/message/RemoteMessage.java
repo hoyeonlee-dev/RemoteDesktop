@@ -34,4 +34,12 @@ public class RemoteMessage implements Serializable {
         FILE_SEND_RESPONSE,
         FILE
     }
+
+    @Override
+    public String toString() {
+        String sb = "RemoteMessage{" + "type=" + type +
+                ", data=" + data.toString() +
+                '}';
+        return sb;
+    }
 }

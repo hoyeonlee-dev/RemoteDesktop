@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
+/**
+ * 사용자에게 비밀번호를 묻는 대화상자
+ */
 public class AskPasswordDialog extends JDialog {
     private final String QUESTION_WHEN_FIRST_TIME = "암호를 입력하세요";
     private final String QUESTION_WHEN_WRONG_PASSWORD = "틀렸습니다. 다시 입력하세요";

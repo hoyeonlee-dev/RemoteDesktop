@@ -4,6 +4,9 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.List;
 
+/**
+ * 서버의 윈도우가 닫혔을 때 처리할 동작들을 일괄로 처리하기 위해 작성한 클래스
+ */
 public class HostWindowListener implements WindowListener {
     List<Runnable> windowCloseRunnable;
 

@@ -1,5 +1,6 @@
 package kr.ac.hansung.remoteDesktop.ui.window;
 
+import kr.ac.hansung.remoteDesktop.server.ClientMessageHandler;
 import kr.ac.hansung.remoteDesktop.server.connection.socketListener.ControlSocketListener;
 import kr.ac.hansung.remoteDesktop.server.connection.socketListener.FileSocketListener;
 import kr.ac.hansung.remoteDesktop.server.connection.socketListener.SocketListener;
@@ -7,7 +8,6 @@ import kr.ac.hansung.remoteDesktop.server.connection.socketListener.VideoSocketL
 import kr.ac.hansung.remoteDesktop.server.session.ServerSession;
 import kr.ac.hansung.remoteDesktop.server.session.Session;
 import kr.ac.hansung.remoteDesktop.server.session.SessionManager;
-import kr.ac.hansung.remoteDesktop.ui.window.event.ClientMessageHandler;
 import kr.ac.hansung.remoteDesktop.ui.window.event.OnFileReceivedListener;
 import kr.ac.hansung.remoteDesktop.util.screenCapture.DXGIScreenCapture;
 import kr.ac.hansung.remoteDesktop.util.screenCapture.DisplaySetting;
@@ -18,6 +18,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 원격 데스크톱 서버가 클라이언트와 상호작용할 때 사용하는 클래스
+ */
 public class RemoteHostDaemon {
     public static final int EXPECTED_REFRESH_RATE = 20;
     private static final DXGIScreenCapture dxgiCapture = new DXGIScreenCapture(1920, 1080);

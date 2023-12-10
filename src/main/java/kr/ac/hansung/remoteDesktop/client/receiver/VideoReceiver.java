@@ -31,6 +31,7 @@ public class VideoReceiver implements Closeable {
                 objectInputStream = new ObjectInputStream(inputStream);
             }
             var imageInfo = (ImageInfo) objectInputStream.readObject();
+            System.out.printf("Client received: %s\n", imageInfo.toString());
             if (imageInfo.type() == ImageInfo.Type.NO_UPDATE) {
                 return 0;
             }

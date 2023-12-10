@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 클라이언트가 화면에 파일을 드롭했을 때 발생하는 이벤트를 처리하는 핸들러
+ */
 public class ClientFileDropHandlerImpl implements FileDropHandler {
     ClientSession clientSession;
 

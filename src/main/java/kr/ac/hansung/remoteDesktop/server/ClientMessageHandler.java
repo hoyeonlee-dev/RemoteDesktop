@@ -1,10 +1,13 @@
-package kr.ac.hansung.remoteDesktop.ui.window.event;
+package kr.ac.hansung.remoteDesktop.server;
 
 import kr.ac.hansung.remoteDesktop.server.session.ServerSession;
 import kr.ac.hansung.remoteDesktop.server.session.SessionManager;
 
 import java.awt.*;
 
+/**
+ * 서버가 클라이언트와 메시지를 주고 받는데 사용하는 클래스
+ */
 public class ClientMessageHandler implements Runnable {
     private final ServerSession serverSession;
     private final SessionManager sessionManager;

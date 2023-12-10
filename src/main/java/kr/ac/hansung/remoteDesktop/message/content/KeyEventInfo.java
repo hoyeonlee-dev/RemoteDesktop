@@ -20,4 +20,12 @@ public class KeyEventInfo implements Serializable {
     public boolean isKeyPress() {
         return keyPress;
     }
+
+    @Override
+    public String toString() {
+        String sb = "KeyEventInfo{" + "keyCode=" + keyCode +
+                ", keyPress=" + keyPress +
+                '}';
+        return sb;
+    }
 }

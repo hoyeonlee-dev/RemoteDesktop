@@ -5,6 +5,9 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+/**
+ * 클라이언트로부터 파일 메시지를 받았을 때 나타나는 대화상자
+ */
 public class AskFileTransferDialog extends JDialog {
     JFrame hostWindow;
     ActionListener ok;

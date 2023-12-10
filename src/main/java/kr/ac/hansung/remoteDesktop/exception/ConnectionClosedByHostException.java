@@ -2,6 +2,7 @@ package kr.ac.hansung.remoteDesktop.exception;
 
 import java.io.IOException;
 
+// 서버에서 일방적으로 연결을 닫았을 때 클라이언트쪽에서 사용하는 Exception
 public class ConnectionClosedByHostException extends IOException {
 
     public static final String ERROR_MESSAGE_BASE = "호스트가 연결을 종료했습니다. : ";

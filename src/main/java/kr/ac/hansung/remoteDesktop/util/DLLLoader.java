@@ -7,6 +7,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * 캡처를 위한 DLL을 로딩하기 위해 사용하는 로더
+ */
 public class DLLLoader {
     public static void LoadDLL(String libraryName) throws RuntimeException {
         Path temp = null;

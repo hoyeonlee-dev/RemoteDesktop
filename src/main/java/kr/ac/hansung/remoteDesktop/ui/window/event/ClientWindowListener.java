@@ -4,6 +4,9 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.List;
 
+/**
+ * 클라이언트 창이 닫혔을 때 서버쪽으로 종료메시지를 보내기 위해 작성한 클래스
+ */
 public class ClientWindowListener implements WindowListener {
     List<Runnable> windowClosedRunnable;
 

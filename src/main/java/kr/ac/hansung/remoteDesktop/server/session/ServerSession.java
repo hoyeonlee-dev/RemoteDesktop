@@ -67,12 +67,14 @@ public class ServerSession extends Session implements Closeable {
         return remoteInputReceiver;
     }
 
+    // 현재 세션에 제어 소켓을 붙입니다.
     public void attachControlSocket(Socket controlSocket) throws IOException {
         super.setControlSocket(controlSocket);
         controlOut = new ObjectOutputStream(controlSocket.getOutputStream());
         messageSender = new MessageSender(controlOut);
     }
 
+    // 현재 세션에 영상 소켓을 붙입니다.
     public void attachVideoSocket(Socket videoSocket) throws IOException {
         super.setVideoSocket(videoSocket);
         videoOut = new ObjectOutputStream(videoSocket.getOutputStream());
@@ -113,6 +115,9 @@ public class ServerSession extends Session implements Closeable {
         }
     }
 
+    /**
+     * 서버의 관점에서 비밀번호 인증을 처리하는 메서드
+     */
     public boolean passwordAuthentication() throws IOException, ClassNotFoundException {
         if (Settings.getInstance().getPassword().isEmpty()) {
             controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
@@ -128,22 +133,26 @@ public class ServerSession extends Session implements Closeable {
         if (controlIn == null) controlIn = new ObjectInputStream(controlSocket.getInputStream());
         for (int i = 0; i <= 3; i++) {
             var message = (RemoteMessage) controlIn.readObject();
+            System.out.printf("Server received : %s\n", message);
             if (message.getType() == RemoteMessage.Type.CONNECTION_CLOSED) return false;
             if (message.getType() != RemoteMessage.Type.PASSWORD) continue;
             if (!message.getData().equals(Settings.getInstance().getPassword())) {
                 if (++count >= 3) {
+                    System.out.println("3회를 초과했습니다 연결을 거절합니다.");
                     controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
                                                              new PasswordMessage(PasswordMessage.Type.CONNECTION_RESET,
                                                                                  "")));
                     controlOut.flush();
                     return false;
                 } else {
+                    System.out.println("암호가 틀렸습니다.");
                     controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
                                                              new PasswordMessage(PasswordMessage.Type.PASSWORD_WRONG,
                                                                                  "")));
                     controlOut.flush();
                 }
             } else {
+                System.out.println("접속을 승인합니다.");
                 controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD,
                                                          new PasswordMessage(PasswordMessage.Type.ACCEPTED,
                                                                              sessionID)));

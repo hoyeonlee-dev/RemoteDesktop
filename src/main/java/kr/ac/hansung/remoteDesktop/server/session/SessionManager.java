@@ -8,6 +8,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 다중 클라이언트 접속을 생각하고 만든 메니저
+ * 실제 사용은 하고 있으나 다중 접속은 접속대역폭으로 인해 사실상 불가능하다 판단하여
+ * 1개가 접속하는 시나리오에 맞게 사용하고 있음
+ */
+
 public class SessionManager {
     private final Map<String, ServerSession> sessions;
 

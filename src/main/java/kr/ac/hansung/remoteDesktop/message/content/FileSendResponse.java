@@ -16,4 +16,11 @@ public record FileSendResponse(Type type) implements Serializable {
             return value;
         }
     }
+
+    @Override
+    public String toString() {
+        String sb = "FileSendResponse{" + "type=" + type +
+                '}';
+        return sb;
+    }
 }

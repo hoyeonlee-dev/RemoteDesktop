@@ -18,6 +18,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * 사용자와 상호작용하는 원격데스크톱의 클라이언트 화면
+ */
 public class RemoteClientWindow implements Runnable {
     private final String address;
     private final RemoteScreen remoteScreen;
@@ -86,6 +89,7 @@ public class RemoteClientWindow implements Runnable {
         remoteScreen.repaint();
     }
 
+    // 서버에서 비밀번호를 요구할 때 사용자에게 암호를 묻습니다.
     public String askPassword(AskPasswordDialog.Type type) {
         var askPasswordWindow = new AskPasswordDialog(type, clientWindow);
         askPasswordWindow.setPosition(100, 100);
@@ -153,6 +157,7 @@ public class RemoteClientWindow implements Runnable {
             }
         });
 
+        // 클라이언트 화면에서 사용자가 마우스를 움직였을 때 할 동작
         clientWindow.getContentPane().addMouseMotionListener(new MouseAdapter() {
             private long lastSent = System.nanoTime();
 
@@ -161,6 +166,7 @@ public class RemoteClientWindow implements Runnable {
                 super.mouseMoved(e);
                 try {
                     long now = System.nanoTime();
+                    //너무 자주 업데이트하면 많은 메시지 전송으로 정상적인 원격 데스크톱 사용이 불가함
                     if ((now - lastSent) / 1000_000 > 30) {
                         mouseSender.sendMouseMove(e.getX(), e.getY());
                         System.out.printf("\r\n%d %d", e.getX(), e.getY());
@@ -172,6 +178,7 @@ public class RemoteClientWindow implements Runnable {
             }
         });
 
+        // 창이 닫힐 때 할 동작들
         receiver.setOnWindowCloseReceived(() -> {
             try {
                 clientSession.close();
@@ -180,6 +187,8 @@ public class RemoteClientWindow implements Runnable {
                 clientWindow.dispose();
             }
         });
+
+        // 서버의 마우스 위치가 도착했을 때 할 동작들
         receiver.setOnMouseMessageReceived(r -> {
             remoteScreen.setMouseX(r.getX());
             remoteScreen.setMouseY(r.getY());
@@ -197,13 +206,15 @@ public class RemoteClientWindow implements Runnable {
 
     @Override
     public void run() {
-        try {
+        try { // 서버에 접속을 요청하는 부분
             clientSession = createClientSession();
-        } catch (IOException e) {
+        } catch (IOException e) { // 암호 인증에 실패했거나 타임아웃에 걸려 연결하지 못한 경우
             System.out.printf("클라이언트 윈도우를 종료합니다. %s", e.getMessage());
             clientWindow.dispose();
             return;
         }
+
+        //연결에 성공했고 원격 데스크톱 세션을 시작할 수 있음
         clientWindow.setTitle(address);
         var receiver = clientSession.getMessageReceiver();
 
@@ -220,6 +231,7 @@ public class RemoteClientWindow implements Runnable {
 
         showClient();
 
+        // 이미지를 수신하고 화면을 업데이트 하는 부분
         try {
             while (!clientSession.isClosed()) {
                 var videoReceiver = clientSession.getVideoReceiver();
