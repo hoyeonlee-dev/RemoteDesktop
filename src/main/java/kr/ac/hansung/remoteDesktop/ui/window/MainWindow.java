@@ -362,7 +362,7 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Settings.getInstance().chooseSavePath();
-                updatePathTextField();
+                updatePathTextField(); //파일 저장 경로 설정 버튼에 대한 이벤트 핸들러
             }
         });
         sf.add(browseButton);
@@ -464,7 +464,7 @@ public class MainWindow extends JFrame {
         return leftAlignedPanel;
     }
     
-    private void updatePathTextField() {
+    private void updatePathTextField() { //UI에서 파일 저장 경로를 업데이트하는 메서드
         pathTextField.setText(Settings.getInstance().getSavePath());
     }
 

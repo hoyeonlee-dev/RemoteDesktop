@@ -57,7 +57,7 @@ public class Settings {
         return savePath;
     }
 
-    public void setSavePath(String savePath) {
+    public void setSavePath(String savePath) { //파일 저장 경로를 설정하는 메서드
         Settings.savePath = savePath;
     }
 
@@ -80,7 +80,7 @@ public class Settings {
         }
     }
 
-    public void chooseSavePath() {
+    public void chooseSavePath() { //사용자에게 파일 저장 경로를 선택하도록 하는 메서드
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int result = fileChooser.showOpenDialog(null);
