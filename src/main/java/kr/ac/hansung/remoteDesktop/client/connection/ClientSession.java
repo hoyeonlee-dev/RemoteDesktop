@@ -169,7 +169,7 @@ public class ClientSession implements Closeable {
         while (true) {
             var message = (RemoteMessage) controlIn.readObject();
             var authMessage = ((PasswordMessage) message.getData());
-            var messageType = authMessage.type();
+            var messageType = authMessage.getType();
             System.out.printf("Client auth : %s\n", message);
 
             if (messageType == PasswordMessage.Type.PASSWORD_REQUIRED || messageType == PasswordMessage.Type.PASSWORD_WRONG) {
@@ -187,7 +187,7 @@ public class ClientSession implements Closeable {
                 System.out.println("암호가 필요없습니다.");
                 controlOut.writeObject(new RemoteMessage(RemoteMessage.Type.PASSWORD, new Empty()));
                 controlOut.flush();
-                sessionID = authMessage.message();
+                sessionID = authMessage.getMessage();
                 break;
             } else if (messageType == PasswordMessage.Type.CONNECTION_RESET) {
                 System.out.println("호스트에서 접속을 거부했습니다.");

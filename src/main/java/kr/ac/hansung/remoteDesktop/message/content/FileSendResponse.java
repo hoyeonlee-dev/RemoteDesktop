@@ -2,7 +2,21 @@ package kr.ac.hansung.remoteDesktop.message.content;
 
 import java.io.Serializable;
 
-public record FileSendResponse(Type type) implements Serializable {
+public class FileSendResponse implements Serializable {
+    private Type type;
+
+    public FileSendResponse(Type type) {
+        this.type = type;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
     public enum Type {
         OK(1), DENIED(0);
 

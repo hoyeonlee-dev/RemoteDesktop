@@ -40,10 +40,10 @@ public class FileSender {
 
             try {
                 var response = (FileSendResponse) objectInputStream.readObject();
-                if (response.type() == FileSendResponse.Type.OK) {
+                if (response.getType() == FileSendResponse.Type.OK) {
                     System.out.println("서버에서 파일 전송을 승인했습니다.");
                     sendFiles(objectOutputStream, files);
-                } else if (response.type() == FileSendResponse.Type.DENIED) {
+                } else if (response.getType() == FileSendResponse.Type.DENIED) {
                     System.out.println("서버에서 파일 전송을 거절했습니다..");
                 }
             } catch (ClassNotFoundException e) {

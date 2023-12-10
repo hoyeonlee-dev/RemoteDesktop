@@ -45,7 +45,8 @@ public class MessageReceiver implements Closeable {
     public void handleServerMessage() throws IOException, ClassNotFoundException {
         try {
             var obj = controlObjectInputStream.readObject();
-            if (obj instanceof RemoteMessage message) {
+            if (obj instanceof RemoteMessage) {
+                var message = (RemoteMessage) obj;
                 System.out.printf("Client received : %s\n", message);
                 if (message.getType() == RemoteMessage.Type.CONNECTION_CLOSED) {
                     if (onWindowCloseReceived != null) {

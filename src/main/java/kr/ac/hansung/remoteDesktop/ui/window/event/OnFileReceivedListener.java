@@ -27,7 +27,7 @@ public class OnFileReceivedListener implements FileSocketListener.OnFileReceived
         AtomicBoolean fileTransferAccepted = new AtomicBoolean(false);
 
         for (var session : sessionManager.getSessions()) {
-            if (session.getKey().equals(request.key())) {
+            if (session.getKey().equals(request.getKey())) {
                 isUserExists = true;
                 break;
             }
@@ -38,7 +38,7 @@ public class OnFileReceivedListener implements FileSocketListener.OnFileReceived
             dialog.start();
         }
 
-        for (var name : request.fileNames()) {
+        for (var name : request.getFileNames()) {
             System.out.println(name);
         }
         return isUserExists && fileTransferAccepted.get();
@@ -48,9 +48,9 @@ public class OnFileReceivedListener implements FileSocketListener.OnFileReceived
     public void receiveFile(FileMessage fileMessage) {
         try {
             var savePath = Settings.getInstance().getSavePath();
-            var filePath = String.format("%s/%s", savePath, fileMessage.fileName());
+            var filePath = String.format("%s/%s", savePath, fileMessage.getFileName());
             var fileOutputStream = new FileOutputStream(filePath);
-            fileOutputStream.write(fileMessage.content());
+            fileOutputStream.write(fileMessage.getContent());
             fileOutputStream.flush();
             fileOutputStream.close();
         } catch (IOException e) {
@@ -63,7 +63,7 @@ public class OnFileReceivedListener implements FileSocketListener.OnFileReceived
         dialog.setPosition(1000, 400);
         dialog.setDialogSize(500, 300);
 
-        dialog.setDialogText(request.fileNames());
+        dialog.setDialogText(request.getFileNames());
 
         dialog.setOk(l -> {
             fileTransferAccepted.set(true);

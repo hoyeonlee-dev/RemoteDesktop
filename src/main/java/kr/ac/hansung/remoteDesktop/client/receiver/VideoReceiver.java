@@ -32,10 +32,10 @@ public class VideoReceiver implements Closeable {
             }
             var imageInfo = (ImageInfo) objectInputStream.readObject();
             System.out.printf("Client received: %s\n", imageInfo.toString());
-            if (imageInfo.type() == ImageInfo.Type.NO_UPDATE) {
+            if (imageInfo.getType() == ImageInfo.Type.NO_UPDATE) {
                 return 0;
             }
-            int length = imageInfo.size();
+            int length = imageInfo.getSize();
             if (length == 0) return tmp.length;
             objectInputStream.readNBytes(tmp, 0, length);
             System.arraycopy(tmp, 0, buffer, 0, length);

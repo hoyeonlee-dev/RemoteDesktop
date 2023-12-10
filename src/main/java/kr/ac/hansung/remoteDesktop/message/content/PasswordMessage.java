@@ -3,7 +3,31 @@ package kr.ac.hansung.remoteDesktop.message.content;
 import java.io.Serializable;
 
 // 접속할 때 암호 인증에 사용하는 메시지
-public record PasswordMessage(Type type, String message) implements Serializable {
+public class PasswordMessage implements Serializable {
+    private Type type;
+    private String message;
+
+    public PasswordMessage(Type type, String message) {
+        this.type = type;
+        this.message = message;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     public enum Type {
         PASSWORD_REQUIRED(0),       // 비밀번호 인증이 필요한 경우
         PASSWORD_NOT_REQUIRED(1),   // 비밀번호 인증이 필요하지 않은 경우
@@ -15,6 +39,7 @@ public record PasswordMessage(Type type, String message) implements Serializable
         Type(int value) {
             this.value = value;
         }
+
     }
 
     @Override

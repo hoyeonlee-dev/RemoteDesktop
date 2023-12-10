@@ -42,11 +42,12 @@ public class FileSocketListener implements Runnable {
                         var inputStream = new ObjectInputStream(accepted.getInputStream());
                         var outputStream = new ObjectOutputStream(accepted.getOutputStream());
                         var fileRequest = inputStream.readObject();
-                        if (fileRequest instanceof FileSendRequest castedRequest) {
+                        if (fileRequest instanceof FileSendRequest) {
+                            var castedRequest = (FileSendRequest) fileRequest;
                             if (listener.receiveFileTransferRequest(castedRequest)) {
                                 // 사용자가 파일 수신을 수락한 경우
                                 outputStream.writeObject(new FileSendResponse(FileSendResponse.Type.OK));
-                                for (int i = 0; i < castedRequest.fileNames().size(); ++i) {
+                                for (int i = 0; i < castedRequest.getFileNames().size(); ++i) {
                                     listener.receiveFile((FileMessage) inputStream.readObject());
                                 }
                             } else {

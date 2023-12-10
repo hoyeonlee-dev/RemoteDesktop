@@ -2,6 +2,12 @@ plugins {
     id 'java'
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11)) // 원하는 Java 버전 설정
+    }
+}
+
 group = 'org.example'
 version = '1.0-SNAPSHOT'
 
